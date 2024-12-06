@@ -1,0 +1,3208 @@
+{
+	"info": {
+		"_postman_id": "236f69e8-252b-4480-a32e-14cfba198f2d",
+		"name": "Laundry Talks API",
+		"description": "Comprehensive API documentation for the Laundry Talks project, developed by Vibrant DigiTech.\n\nContact Support:\n Email: vibrantdigitech@gmail.com",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "16782346"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "auth",
+					"item": [
+						{
+							"name": "login",
+							"item": [
+								{
+									"name": "auth auth login create",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"username\": \"<email>\",\n  \"password\": \"<string>\",\n  \"role\": \"Master Admin\"\n}",
+											"options": {
+												"raw": {
+													"headerFamily": "json",
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/auth/auth/login/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"auth",
+												"auth",
+												"login",
+												""
+											]
+										}
+									},
+									"response": [
+										{
+											"name": "User Logged in successfully",
+											"originalRequest": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "Basic <credentials>",
+														"description": "Added as a part of security scheme: basic"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"username\": \"<email>\",\n  \"password\": \"<string>\",\n  \"role\": \"Master Admin\"\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/auth/auth/login/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"auth",
+														"auth",
+														"login",
+														""
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "text",
+											"header": [],
+											"cookie": [],
+											"body": ""
+										},
+										{
+											"name": "Invalid credentials",
+											"originalRequest": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "Basic <credentials>",
+														"description": "Added as a part of security scheme: basic"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"username\": \"<email>\",\n  \"password\": \"<string>\",\n  \"role\": \"Master Admin\"\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/auth/auth/login/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"auth",
+														"auth",
+														"login",
+														""
+													]
+												}
+											},
+											"status": "Bad Request",
+											"code": 400,
+											"_postman_previewlanguage": "text",
+											"header": [],
+											"cookie": [],
+											"body": ""
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "counter",
+			"item": [
+				{
+					"name": "api",
+					"item": [
+						{
+							"name": "categories",
+							"item": [
+								{
+									"name": "counter api categories list",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/counter/api/categories/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"counter",
+												"api",
+												"categories",
+												""
+											]
+										},
+										"description": "Fetch all categories available in the system."
+									},
+									"response": [
+										{
+											"name": "Untitled Response",
+											"originalRequest": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "Basic <credentials>",
+														"description": "Added as a part of security scheme: basic"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/counter/api/categories/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"counter",
+														"api",
+														"categories",
+														""
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "[\n  {\n    \"name\": \"<string>\"\n  },\n  {\n    \"name\": \"<string>\"\n  }\n]"
+										},
+										{
+											"name": "Internal Server Error: Unexpected error",
+											"originalRequest": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Basic <credentials>",
+														"description": "Added as a part of security scheme: basic"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/counter/api/categories/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"counter",
+														"api",
+														"categories",
+														""
+													]
+												}
+											},
+											"status": "Internal Server Error",
+											"code": 500,
+											"_postman_previewlanguage": "text",
+											"header": [],
+											"cookie": [],
+											"body": ""
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "get-customers",
+							"item": [
+								{
+									"name": "{outlet_id}",
+									"item": [
+										{
+											"name": "counter api get-customers read",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/counter/api/get-customers/:outlet_id/?phone_number=<string>",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"counter",
+														"api",
+														"get-customers",
+														":outlet_id",
+														""
+													],
+													"query": [
+														{
+															"key": "phone_number",
+															"value": "<string>",
+															"description": "Phone number of the customer"
+														}
+													],
+													"variable": [
+														{
+															"key": "outlet_id",
+															"value": "<string>",
+															"description": "(Required) "
+														}
+													]
+												}
+											},
+											"response": [
+												{
+													"name": "Customer found",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/get-customers/:outlet_id/?phone_number=<string>",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																"get-customers",
+																":outlet_id",
+																""
+															],
+															"query": [
+																{
+																	"key": "phone_number",
+																	"value": "<string>",
+																	"description": "Phone number of the customer"
+																}
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "OK",
+													"code": 200,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"name\": \"<string>\",\n  \"phone_number\": \"<string>\",\n  \"state\": \"<string>\",\n  \"outlet\": \"<integer>\",\n  \"gst_number\": \"<string>\"\n}"
+												},
+												{
+													"name": "Bad request, missing phone number or invalid outlet ID",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/get-customers/:outlet_id/?phone_number=<string>",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																"get-customers",
+																":outlet_id",
+																""
+															],
+															"query": [
+																{
+																	"key": "phone_number",
+																	"value": "<string>",
+																	"description": "Phone number of the customer"
+																}
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Bad Request",
+													"code": 400,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "No customer record found",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/get-customers/:outlet_id/?phone_number=<string>",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																"get-customers",
+																":outlet_id",
+																""
+															],
+															"query": [
+																{
+																	"key": "phone_number",
+																	"value": "<string>",
+																	"description": "Phone number of the customer"
+																}
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Not Found",
+													"code": 404,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Internal server error",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/get-customers/:outlet_id/?phone_number=<string>",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																"get-customers",
+																":outlet_id",
+																""
+															],
+															"query": [
+																{
+																	"key": "phone_number",
+																	"value": "<string>",
+																	"description": "Phone number of the customer"
+																}
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Internal Server Error",
+													"code": 500,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "get-products",
+							"item": [
+								{
+									"name": "{outlet_id}",
+									"item": [
+										{
+											"name": "counter api get-products read",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/counter/api/get-products/:outlet_id/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"counter",
+														"api",
+														"get-products",
+														":outlet_id",
+														""
+													],
+													"variable": [
+														{
+															"key": "outlet_id",
+															"value": "<string>",
+															"description": "(Required) "
+														}
+													]
+												},
+												"description": "Fetch products for a specific outlet by outlet_id with associated category names."
+											},
+											"response": [
+												{
+													"name": "Untitled Response",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/get-products/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																"get-products",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "OK",
+													"code": 200,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "[\n  {\n    \"item_name\": \"<string>\",\n    \"rate_per_unit\": \"<string>\",\n    \"category_name\": \"<string>\",\n    \"hsn_sac_code\": \"<string>\"\n  },\n  {\n    \"item_name\": \"<string>\",\n    \"rate_per_unit\": \"<string>\",\n    \"category_name\": \"<string>\",\n    \"hsn_sac_code\": \"<string>\"\n  }\n]"
+												},
+												{
+													"name": "Bad Request: Outlet not found",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/get-products/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																"get-products",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Bad Request",
+													"code": 400,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Internal Server Error: Unexpected error",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/get-products/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																"get-products",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Internal Server Error",
+													"code": 500,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "{outlet_id}",
+							"item": [
+								{
+									"name": "customers",
+									"item": [
+										{
+											"name": "add",
+											"item": [
+												{
+													"name": "counter api customers add create",
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Accept",
+																"value": "application/json"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"name\": \"<string>\",\n  \"phone_number\": \"<string>\",\n  \"state\": \"<string>\",\n  \"outlet\": \"<integer>\",\n  \"gst_number\": \"<string>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/:outlet_id/customers/add/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																":outlet_id",
+																"customers",
+																"add",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id",
+																	"value": "<string>",
+																	"description": "(Required) "
+																}
+															]
+														}
+													},
+													"response": [
+														{
+															"name": "Customer added successfully",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Accept",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"name\": \"<string>\",\n  \"phone_number\": \"<string>\",\n  \"state\": \"<string>\",\n  \"outlet\": \"<integer>\",\n  \"gst_number\": \"<string>\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/counter/api/:outlet_id/customers/add/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"counter",
+																		"api",
+																		":outlet_id",
+																		"customers",
+																		"add",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Created",
+															"code": 201,
+															"_postman_previewlanguage": "json",
+															"header": [
+																{
+																	"key": "Content-Type",
+																	"value": "application/json"
+																}
+															],
+															"cookie": [],
+															"body": "{\n  \"name\": \"<string>\",\n  \"phone_number\": \"<string>\",\n  \"state\": \"<string>\",\n  \"outlet\": \"<integer>\",\n  \"gst_number\": \"<string>\"\n}"
+														},
+														{
+															"name": "Bad request, invalid customer data",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"name\": \"<string>\",\n  \"phone_number\": \"<string>\",\n  \"state\": \"<string>\",\n  \"outlet\": \"<integer>\",\n  \"gst_number\": \"<string>\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/counter/api/:outlet_id/customers/add/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"counter",
+																		"api",
+																		":outlet_id",
+																		"customers",
+																		"add",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Bad Request",
+															"code": 400,
+															"_postman_previewlanguage": "text",
+															"header": [],
+															"cookie": [],
+															"body": ""
+														},
+														{
+															"name": "Internal server error",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"name\": \"<string>\",\n  \"phone_number\": \"<string>\",\n  \"state\": \"<string>\",\n  \"outlet\": \"<integer>\",\n  \"gst_number\": \"<string>\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/counter/api/:outlet_id/customers/add/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"counter",
+																		"api",
+																		":outlet_id",
+																		"customers",
+																		"add",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Internal Server Error",
+															"code": 500,
+															"_postman_previewlanguage": "text",
+															"header": [],
+															"cookie": [],
+															"body": ""
+														}
+													]
+												}
+											]
+										}
+									]
+								},
+								{
+									"name": "orders",
+									"item": [
+										{
+											"name": "place",
+											"item": [
+												{
+													"name": "Place an Order",
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Accept",
+																"value": "application/json"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"customer_phone\": \"9999999999\",\n  \"order_items\": [\n    {\n      \"product_id\": 1,\n      \"quantity\": 2\n    },\n    {\n      \"product_id\": 2,\n      \"quantity\": 1\n    }\n  ],\n  \"date_of_collection\": \"2024-12-06\",\n  \"discount_percentage\": 10.0,\n  \"total_gst\": 56.7,\n  \"total_cgst\": 28.35,\n  \"total_sgst\": 28.35,\n  \"total_igst\": 0.0,\n  \"mode_of_payment\": \"UPI\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/:outlet_id/orders/place/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																":outlet_id",
+																"orders",
+																"place",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id",
+																	"value": "1",
+																	"description": "(Required) "
+																}
+															]
+														},
+														"description": "This endpoint places an order for a specific outlet. It creates the order, links it to the customer, calculates totals, and adds items to the order."
+													},
+													"response": [
+														{
+															"name": "Order placed successfully.",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Accept",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"customer_phone\": \"<string>\",\n  \"order_items\": [\n    {\n      \"product_id\": \"<integer>\",\n      \"quantity\": \"<integer>\"\n    },\n    {\n      \"product_id\": \"<integer>\",\n      \"quantity\": \"<integer>\"\n    }\n  ],\n  \"date_of_collection\": \"<date>\",\n  \"discount_percentage\": \"<float>\",\n  \"total_gst\": \"<float>\",\n  \"total_cgst\": \"<float>\",\n  \"total_sgst\": \"<float>\",\n  \"total_igst\": \"<float>\",\n  \"mode_of_payment\": \"ONLINE\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/counter/api/:outlet_id/orders/place/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"counter",
+																		"api",
+																		":outlet_id",
+																		"orders",
+																		"place",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Created",
+															"code": 201,
+															"_postman_previewlanguage": "json",
+															"header": [
+																{
+																	"key": "Content-Type",
+																	"value": "application/json"
+																}
+															],
+															"cookie": [],
+															"body": "{\n  \"examples\": {\n    \"response\": {\n      \"value\": {\n        \"error\": false,\n        \"order_number\": \"ABC123456789\",\n        \"message\": \"Order placed successfully.\"\n      }\n    }\n  }\n}"
+														},
+														{
+															"name": "Invalid input or missing data.",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Accept",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"customer_phone\": \"<string>\",\n  \"order_items\": [\n    {\n      \"product_id\": \"<integer>\",\n      \"quantity\": \"<integer>\"\n    },\n    {\n      \"product_id\": \"<integer>\",\n      \"quantity\": \"<integer>\"\n    }\n  ],\n  \"date_of_collection\": \"<date>\",\n  \"discount_percentage\": \"<float>\",\n  \"total_gst\": \"<float>\",\n  \"total_cgst\": \"<float>\",\n  \"total_sgst\": \"<float>\",\n  \"total_igst\": \"<float>\",\n  \"mode_of_payment\": \"ONLINE\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/counter/api/:outlet_id/orders/place/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"counter",
+																		"api",
+																		":outlet_id",
+																		"orders",
+																		"place",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Bad Request",
+															"code": 400,
+															"_postman_previewlanguage": "json",
+															"header": [
+																{
+																	"key": "Content-Type",
+																	"value": "application/json"
+																}
+															],
+															"cookie": [],
+															"body": "{\n  \"examples\": {\n    \"response\": {\n      \"value\": {\n        \"error\": true,\n        \"detail\": \"Validation error or missing fields.\"\n      }\n    }\n  }\n}"
+														},
+														{
+															"name": "Internal server error.",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Accept",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"customer_phone\": \"<string>\",\n  \"order_items\": [\n    {\n      \"product_id\": \"<integer>\",\n      \"quantity\": \"<integer>\"\n    },\n    {\n      \"product_id\": \"<integer>\",\n      \"quantity\": \"<integer>\"\n    }\n  ],\n  \"date_of_collection\": \"<date>\",\n  \"discount_percentage\": \"<float>\",\n  \"total_gst\": \"<float>\",\n  \"total_cgst\": \"<float>\",\n  \"total_sgst\": \"<float>\",\n  \"total_igst\": \"<float>\",\n  \"mode_of_payment\": \"ONLINE\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/counter/api/:outlet_id/orders/place/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"counter",
+																		"api",
+																		":outlet_id",
+																		"orders",
+																		"place",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Internal Server Error",
+															"code": 500,
+															"_postman_previewlanguage": "json",
+															"header": [
+																{
+																	"key": "Content-Type",
+																	"value": "application/json"
+																}
+															],
+															"cookie": [],
+															"body": "{\n  \"examples\": {\n    \"response\": {\n      \"value\": {\n        \"error\": true,\n        \"detail\": \"An unexpected error occurred.\"\n      }\n    }\n  }\n}"
+														}
+													]
+												}
+											]
+										},
+										{
+											"name": "Retrieve Orders by Outlet",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/counter/api/:outlet_id/orders/?start_date=<date>&end_date=<date>&customer_phone=<string>",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"counter",
+														"api",
+														":outlet_id",
+														"orders",
+														""
+													],
+													"query": [
+														{
+															"key": "start_date",
+															"value": "<date>",
+															"description": "Filter orders starting from this date (YYYY-MM-DD)."
+														},
+														{
+															"key": "end_date",
+															"value": "<date>",
+															"description": "Filter orders up to this date (YYYY-MM-DD)."
+														},
+														{
+															"key": "customer_phone",
+															"value": "<string>",
+															"description": "Filter orders by the customer's phone number."
+														}
+													],
+													"variable": [
+														{
+															"key": "outlet_id",
+															"value": "<string>",
+															"description": "(Required) "
+														}
+													]
+												},
+												"description": "Retrieve a list of all orders for a specific outlet with optional filters for date and customer phone number."
+											},
+											"response": [
+												{
+													"name": "A list of orders for the specified outlet.",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/:outlet_id/orders/?start_date=<date>&end_date=<date>&customer_phone=<string>",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																":outlet_id",
+																"orders",
+																""
+															],
+															"query": [
+																{
+																	"key": "start_date",
+																	"value": "<date>",
+																	"description": "Filter orders starting from this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "end_date",
+																	"value": "<date>",
+																	"description": "Filter orders up to this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "customer_phone",
+																	"value": "<string>",
+																	"description": "Filter orders by the customer's phone number."
+																}
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "OK",
+													"code": 200,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"examples\": {\n    \"response\": {\n      \"value\": {\n        \"error\": false,\n        \"orders\": [\n          {\n            \"order_number\": \"ABC12345\",\n            \"date_of_billing\": \"2024-12-01\",\n            \"invoice_number\": \"INV001\",\n            \"total_amount\": \"1000.00\",\n            \"discount_percentage\": \"10.00\",\n            \"total_gst\": \"180.00\",\n            \"total_cgst\": \"90.00\",\n            \"total_sgst\": \"90.00\",\n            \"total_igst\": \"0.00\",\n            \"mode_of_payment\": \"CASH\"\n          }\n        ]\n      }\n    }\n  }\n}"
+												},
+												{
+													"name": "No orders found for the given filters or outlet not found.",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/:outlet_id/orders/?start_date=<date>&end_date=<date>&customer_phone=<string>",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																":outlet_id",
+																"orders",
+																""
+															],
+															"query": [
+																{
+																	"key": "start_date",
+																	"value": "<date>",
+																	"description": "Filter orders starting from this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "end_date",
+																	"value": "<date>",
+																	"description": "Filter orders up to this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "customer_phone",
+																	"value": "<string>",
+																	"description": "Filter orders by the customer's phone number."
+																}
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Not Found",
+													"code": 404,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"examples\": {\n    \"response\": {\n      \"value\": {\n        \"error\": true,\n        \"detail\": \"Outlet not found.\"\n      }\n    }\n  }\n}"
+												},
+												{
+													"name": "Internal server error.",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/:outlet_id/orders/?start_date=<date>&end_date=<date>&customer_phone=<string>",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																":outlet_id",
+																"orders",
+																""
+															],
+															"query": [
+																{
+																	"key": "start_date",
+																	"value": "<date>",
+																	"description": "Filter orders starting from this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "end_date",
+																	"value": "<date>",
+																	"description": "Filter orders up to this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "customer_phone",
+																	"value": "<string>",
+																	"description": "Filter orders by the customer's phone number."
+																}
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Internal Server Error",
+													"code": 500,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"examples\": {\n    \"response\": {\n      \"value\": {\n        \"error\": true,\n        \"detail\": \"An unexpected error occurred.\"\n      }\n    }\n  }\n}"
+												}
+											]
+										}
+									]
+								},
+								{
+									"name": "product",
+									"item": [
+										{
+											"name": "add",
+											"item": [
+												{
+													"name": "counter api product add create",
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"category_name\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/counter/api/:outlet_id/product/add/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"counter",
+																"api",
+																":outlet_id",
+																"product",
+																"add",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id",
+																	"value": "<string>",
+																	"description": "(Required) "
+																}
+															]
+														},
+														"description": "Add a product to a specific outlet using outlet ID."
+													},
+													"response": [
+														{
+															"name": "Product added successfully",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"category_name\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/counter/api/:outlet_id/product/add/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"counter",
+																		"api",
+																		":outlet_id",
+																		"product",
+																		"add",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Created",
+															"code": 201,
+															"_postman_previewlanguage": "text",
+															"header": [],
+															"cookie": [],
+															"body": ""
+														},
+														{
+															"name": "Bad request",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"category_name\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/counter/api/:outlet_id/product/add/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"counter",
+																		"api",
+																		":outlet_id",
+																		"product",
+																		"add",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Bad Request",
+															"code": 400,
+															"_postman_previewlanguage": "text",
+															"header": [],
+															"cookie": [],
+															"body": ""
+														},
+														{
+															"name": "Internal server error",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"category_name\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/counter/api/:outlet_id/product/add/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"counter",
+																		"api",
+																		":outlet_id",
+																		"product",
+																		"add",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Internal Server Error",
+															"code": 500,
+															"_postman_previewlanguage": "text",
+															"header": [],
+															"cookie": [],
+															"body": ""
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "panel",
+			"item": [
+				{
+					"name": "api",
+					"item": [
+						{
+							"name": "add_product",
+							"item": [
+								{
+									"name": "{user_id}",
+									"item": [
+										{
+											"name": "{outlet_id}",
+											"item": [
+												{
+													"name": "panel api add product create",
+													"request": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\",\n  \"category\": \"<integer>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/add_product/:user_id/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"add_product",
+																":user_id",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "user_id",
+																	"value": "<string>",
+																	"description": "(Required) "
+																},
+																{
+																	"key": "outlet_id",
+																	"value": "<string>",
+																	"description": "(Required) "
+																}
+															]
+														},
+														"description": "Add a product to a specific outlet using outlet ID."
+													},
+													"response": [
+														{
+															"name": "Product added successfully",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\",\n  \"category\": \"<integer>\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/panel/api/add_product/:user_id/:outlet_id/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"panel",
+																		"api",
+																		"add_product",
+																		":user_id",
+																		":outlet_id",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "user_id"
+																		},
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Created",
+															"code": 201,
+															"_postman_previewlanguage": "text",
+															"header": [],
+															"cookie": [],
+															"body": ""
+														},
+														{
+															"name": "Bad request",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\",\n  \"category\": \"<integer>\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/panel/api/add_product/:user_id/:outlet_id/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"panel",
+																		"api",
+																		"add_product",
+																		":user_id",
+																		":outlet_id",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "user_id"
+																		},
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Bad Request",
+															"code": 400,
+															"_postman_previewlanguage": "text",
+															"header": [],
+															"cookie": [],
+															"body": ""
+														},
+														{
+															"name": "Internal server error",
+															"originalRequest": {
+																"method": "POST",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "Basic <credentials>",
+																		"description": "Added as a part of security scheme: basic"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\",\n  \"category\": \"<integer>\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/panel/api/add_product/:user_id/:outlet_id/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"panel",
+																		"api",
+																		"add_product",
+																		":user_id",
+																		":outlet_id",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "user_id"
+																		},
+																		{
+																			"key": "outlet_id"
+																		}
+																	]
+																}
+															},
+															"status": "Internal Server Error",
+															"code": 500,
+															"_postman_previewlanguage": "text",
+															"header": [],
+															"cookie": [],
+															"body": ""
+														}
+													]
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "add_products_excel",
+							"item": [
+								{
+									"name": "{user_id}",
+									"item": [
+										{
+											"name": "panel api add products excel create",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\",\n  \"category\": \"<integer>\"\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/panel/api/add_products_excel/:user_id/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"panel",
+														"api",
+														"add_products_excel",
+														":user_id",
+														""
+													],
+													"variable": [
+														{
+															"key": "user_id",
+															"value": "<string>",
+															"description": "(Required) "
+														}
+													]
+												},
+												"description": "Add products from an Excel file."
+											},
+											"response": [
+												{
+													"name": "Products added successfully",
+													"originalRequest": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\",\n  \"category\": \"<integer>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/add_products_excel/:user_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"add_products_excel",
+																":user_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "user_id"
+																}
+															]
+														}
+													},
+													"status": "Created",
+													"code": 201,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Bad request",
+													"originalRequest": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\",\n  \"category\": \"<integer>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/add_products_excel/:user_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"add_products_excel",
+																":user_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "user_id"
+																}
+															]
+														}
+													},
+													"status": "Bad Request",
+													"code": 400,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Internal server error",
+													"originalRequest": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"item_name\": \"<string>\",\n  \"rate_per_unit\": \"<string>\",\n  \"hsn_sac_code\": \"<string>\",\n  \"category\": \"<integer>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/add_products_excel/:user_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"add_products_excel",
+																":user_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "user_id"
+																}
+															]
+														}
+													},
+													"status": "Internal Server Error",
+													"code": 500,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "create_outlet",
+							"item": [
+								{
+									"name": "{user_id}",
+									"item": [
+										{
+											"name": "Create a new Outlet",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"owner_name\": \"<string>\",\n  \"company_owned\": \"<string>\",\n  \"location\": \"<string>\",\n  \"address\": \"<string>\",\n  \"owner_details\": \"<string>\"\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/panel/api/create_outlet/:user_id/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"panel",
+														"api",
+														"create_outlet",
+														":user_id",
+														""
+													],
+													"variable": [
+														{
+															"key": "user_id",
+															"value": "<string>",
+															"description": "(Required) "
+														}
+													]
+												}
+											},
+											"response": [
+												{
+													"name": "Outlet created successfully",
+													"originalRequest": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"owner_name\": \"<string>\",\n  \"company_owned\": \"<string>\",\n  \"location\": \"<string>\",\n  \"address\": \"<string>\",\n  \"owner_details\": \"<string>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/create_outlet/:user_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"create_outlet",
+																":user_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "user_id"
+																}
+															]
+														}
+													},
+													"status": "Created",
+													"code": 201,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"error\": \"<boolean>\",\n  \"detail\": \"<string>\"\n}"
+												},
+												{
+													"name": "Bad Request - Validation error",
+													"originalRequest": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"owner_name\": \"<string>\",\n  \"company_owned\": \"<string>\",\n  \"location\": \"<string>\",\n  \"address\": \"<string>\",\n  \"owner_details\": \"<string>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/create_outlet/:user_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"create_outlet",
+																":user_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "user_id"
+																}
+															]
+														}
+													},
+													"status": "Bad Request",
+													"code": 400,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"error\": \"<boolean>\",\n  \"detail\": {}\n}"
+												},
+												{
+													"name": "Unauthorized - Invalid token",
+													"originalRequest": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"owner_name\": \"<string>\",\n  \"company_owned\": \"<string>\",\n  \"location\": \"<string>\",\n  \"address\": \"<string>\",\n  \"owner_details\": \"<string>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/create_outlet/:user_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"create_outlet",
+																":user_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "user_id"
+																}
+															]
+														}
+													},
+													"status": "Unauthorized",
+													"code": 401,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"error\": \"<boolean>\",\n  \"detail\": \"<string>\"\n}"
+												},
+												{
+													"name": "Forbidden - Insufficient permissions",
+													"originalRequest": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"owner_name\": \"<string>\",\n  \"company_owned\": \"<string>\",\n  \"location\": \"<string>\",\n  \"address\": \"<string>\",\n  \"owner_details\": \"<string>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/create_outlet/:user_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"create_outlet",
+																":user_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "user_id"
+																}
+															]
+														}
+													},
+													"status": "Forbidden",
+													"code": 403,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"error\": \"<boolean>\",\n  \"detail\": \"<string>\"\n}"
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "get_all_outlets",
+							"item": [
+								{
+									"name": "panel api get all outlets list",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/panel/api/get_all_outlets/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"panel",
+												"api",
+												"get_all_outlets",
+												""
+											]
+										},
+										"description": "Fetch all outlets for the logged-in user. Authorization token required."
+									},
+									"response": [
+										{
+											"name": "Untitled Response",
+											"originalRequest": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "Basic <credentials>",
+														"description": "Added as a part of security scheme: basic"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/panel/api/get_all_outlets/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"panel",
+														"api",
+														"get_all_outlets",
+														""
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "[\n  {\n    \"owner_name\": \"<string>\",\n    \"company_owned\": \"<string>\",\n    \"location\": \"<string>\",\n    \"address\": \"<string>\",\n    \"owner_details\": \"<string>\",\n    \"id\": \"<integer>\"\n  },\n  {\n    \"owner_name\": \"<string>\",\n    \"company_owned\": \"<string>\",\n    \"location\": \"<string>\",\n    \"address\": \"<string>\",\n    \"owner_details\": \"<string>\",\n    \"id\": \"<integer>\"\n  }\n]"
+										},
+										{
+											"name": "Unauthorized - Token missing or invalid",
+											"originalRequest": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Basic <credentials>",
+														"description": "Added as a part of security scheme: basic"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/panel/api/get_all_outlets/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"panel",
+														"api",
+														"get_all_outlets",
+														""
+													]
+												}
+											},
+											"status": "Unauthorized",
+											"code": 401,
+											"_postman_previewlanguage": "text",
+											"header": [],
+											"cookie": [],
+											"body": ""
+										},
+										{
+											"name": "Internal Server Error",
+											"originalRequest": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "Basic <credentials>",
+														"description": "Added as a part of security scheme: basic"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/panel/api/get_all_outlets/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"panel",
+														"api",
+														"get_all_outlets",
+														""
+													]
+												}
+											},
+											"status": "Internal Server Error",
+											"code": 500,
+											"_postman_previewlanguage": "text",
+											"header": [],
+											"cookie": [],
+											"body": ""
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "get_outlet_creds",
+							"item": [
+								{
+									"name": "{outlet_id}",
+									"item": [
+										{
+											"name": "panel api get outlet creds read",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/panel/api/get_outlet_creds/:outlet_id/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"panel",
+														"api",
+														"get_outlet_creds",
+														":outlet_id",
+														""
+													],
+													"variable": [
+														{
+															"key": "outlet_id",
+															"value": "<string>",
+															"description": "(Required) "
+														}
+													]
+												},
+												"description": "Retrieve the credentials for a specific outlet."
+											},
+											"response": [
+												{
+													"name": "Untitled Response",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/get_outlet_creds/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"get_outlet_creds",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "OK",
+													"code": 200,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"username\": \"<string>\",\n  \"password\": \"<string>\",\n  \"user\": \"<integer>\",\n  \"outlet\": \"<integer>\"\n}"
+												},
+												{
+													"name": "Credentials not found",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/get_outlet_creds/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"get_outlet_creds",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Not Found",
+													"code": 404,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "get_products_for_outlet",
+							"item": [
+								{
+									"name": "{outlet_id}",
+									"item": [
+										{
+											"name": "panel api get products for outlet read",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/panel/api/get_products_for_outlet/:outlet_id/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"panel",
+														"api",
+														"get_products_for_outlet",
+														":outlet_id",
+														""
+													],
+													"variable": [
+														{
+															"key": "outlet_id",
+															"value": "<string>",
+															"description": "(Required) "
+														}
+													]
+												},
+												"description": "Retrieve the products for a specific outlet by outlet ID."
+											},
+											"response": [
+												{
+													"name": "Untitled Response",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/get_products_for_outlet/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"get_products_for_outlet",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "OK",
+													"code": 200,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "[\n  {\n    \"item_name\": \"<string>\",\n    \"rate_per_unit\": \"<string>\",\n    \"hsn_sac_code\": \"<string>\",\n    \"category\": \"<integer>\"\n  },\n  {\n    \"item_name\": \"<string>\",\n    \"rate_per_unit\": \"<string>\",\n    \"hsn_sac_code\": \"<string>\",\n    \"category\": \"<integer>\"\n  }\n]"
+												},
+												{
+													"name": "No products found for this outlet",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/get_products_for_outlet/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"get_products_for_outlet",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Not Found",
+													"code": 404,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "manage_outlet_creds",
+							"item": [
+								{
+									"name": "{outlet_id}",
+									"item": [
+										{
+											"name": "panel api manage outlet creds create",
+											"request": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"username\": \"<string>\",\n  \"password\": \"<string>\",\n  \"user\": \"<integer>\",\n  \"outlet\": \"<integer>\"\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/panel/api/manage_outlet_creds/:outlet_id/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"panel",
+														"api",
+														"manage_outlet_creds",
+														":outlet_id",
+														""
+													],
+													"variable": [
+														{
+															"key": "outlet_id",
+															"value": "<string>",
+															"description": "(Required) "
+														}
+													]
+												},
+												"description": "Create or update credentials for a user in a specific outlet."
+											},
+											"response": [
+												{
+													"name": "User and Outlet credentials added successfully",
+													"originalRequest": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"username\": \"<string>\",\n  \"password\": \"<string>\",\n  \"user\": \"<integer>\",\n  \"outlet\": \"<integer>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/manage_outlet_creds/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"manage_outlet_creds",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Created",
+													"code": 201,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Bad request",
+													"originalRequest": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"username\": \"<string>\",\n  \"password\": \"<string>\",\n  \"user\": \"<integer>\",\n  \"outlet\": \"<integer>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/manage_outlet_creds/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"manage_outlet_creds",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Bad Request",
+													"code": 400,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												},
+												{
+													"name": "Internal server error",
+													"originalRequest": {
+														"method": "POST",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"username\": \"<string>\",\n  \"password\": \"<string>\",\n  \"user\": \"<integer>\",\n  \"outlet\": \"<integer>\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/manage_outlet_creds/:outlet_id/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																"manage_outlet_creds",
+																":outlet_id",
+																""
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Internal Server Error",
+													"code": 500,
+													"_postman_previewlanguage": "text",
+													"header": [],
+													"cookie": [],
+													"body": ""
+												}
+											]
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "{outlet_id}",
+							"item": [
+								{
+									"name": "get-orders",
+									"item": [
+										{
+											"name": "Retrieve Orders by Outlet",
+											"request": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/panel/api/:outlet_id/get-orders/?start_date=<date>&end_date=<date>&customer_phone=<string>",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"panel",
+														"api",
+														":outlet_id",
+														"get-orders",
+														""
+													],
+													"query": [
+														{
+															"key": "start_date",
+															"value": "<date>",
+															"description": "Filter orders starting from this date (YYYY-MM-DD)."
+														},
+														{
+															"key": "end_date",
+															"value": "<date>",
+															"description": "Filter orders up to this date (YYYY-MM-DD)."
+														},
+														{
+															"key": "customer_phone",
+															"value": "<string>",
+															"description": "Filter orders by the customer's phone number."
+														}
+													],
+													"variable": [
+														{
+															"key": "outlet_id",
+															"value": "<string>",
+															"description": "(Required) "
+														}
+													]
+												},
+												"description": "Retrieve a list of all orders for a specific outlet with optional filters for date and customer phone number."
+											},
+											"response": [
+												{
+													"name": "A list of orders for the specified outlet.",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/:outlet_id/get-orders/?start_date=<date>&end_date=<date>&customer_phone=<string>",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																":outlet_id",
+																"get-orders",
+																""
+															],
+															"query": [
+																{
+																	"key": "start_date",
+																	"value": "<date>",
+																	"description": "Filter orders starting from this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "end_date",
+																	"value": "<date>",
+																	"description": "Filter orders up to this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "customer_phone",
+																	"value": "<string>",
+																	"description": "Filter orders by the customer's phone number."
+																}
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "OK",
+													"code": 200,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"examples\": {\n    \"response\": {\n      \"value\": {\n        \"error\": false,\n        \"orders\": [\n          {\n            \"order_number\": \"ABC12345\",\n            \"date_of_billing\": \"2024-12-01\",\n            \"invoice_number\": \"INV001\",\n            \"total_amount\": \"1000.00\",\n            \"discount_percentage\": \"10.00\",\n            \"total_gst\": \"180.00\",\n            \"total_cgst\": \"90.00\",\n            \"total_sgst\": \"90.00\",\n            \"total_igst\": \"0.00\",\n            \"mode_of_payment\": \"CASH\"\n          }\n        ]\n      }\n    }\n  }\n}"
+												},
+												{
+													"name": "No orders found for the given filters or outlet not found.",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/:outlet_id/get-orders/?start_date=<date>&end_date=<date>&customer_phone=<string>",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																":outlet_id",
+																"get-orders",
+																""
+															],
+															"query": [
+																{
+																	"key": "start_date",
+																	"value": "<date>",
+																	"description": "Filter orders starting from this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "end_date",
+																	"value": "<date>",
+																	"description": "Filter orders up to this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "customer_phone",
+																	"value": "<string>",
+																	"description": "Filter orders by the customer's phone number."
+																}
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Not Found",
+													"code": 404,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"examples\": {\n    \"response\": {\n      \"value\": {\n        \"error\": true,\n        \"detail\": \"Outlet not found.\"\n      }\n    }\n  }\n}"
+												},
+												{
+													"name": "Internal server error.",
+													"originalRequest": {
+														"method": "GET",
+														"header": [
+															{
+																"key": "Accept",
+																"value": "application/json"
+															},
+															{
+																"key": "Authorization",
+																"value": "Basic <credentials>",
+																"description": "Added as a part of security scheme: basic"
+															}
+														],
+														"url": {
+															"raw": "{{baseUrl}}/panel/api/:outlet_id/get-orders/?start_date=<date>&end_date=<date>&customer_phone=<string>",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"panel",
+																"api",
+																":outlet_id",
+																"get-orders",
+																""
+															],
+															"query": [
+																{
+																	"key": "start_date",
+																	"value": "<date>",
+																	"description": "Filter orders starting from this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "end_date",
+																	"value": "<date>",
+																	"description": "Filter orders up to this date (YYYY-MM-DD)."
+																},
+																{
+																	"key": "customer_phone",
+																	"value": "<string>",
+																	"description": "Filter orders by the customer's phone number."
+																}
+															],
+															"variable": [
+																{
+																	"key": "outlet_id"
+																}
+															]
+														}
+													},
+													"status": "Internal Server Error",
+													"code": 500,
+													"_postman_previewlanguage": "json",
+													"header": [
+														{
+															"key": "Content-Type",
+															"value": "application/json"
+														}
+													],
+													"cookie": [],
+													"body": "{\n  \"examples\": {\n    \"response\": {\n      \"value\": {\n        \"error\": true,\n        \"detail\": \"An unexpected error occurred.\"\n      }\n    }\n  }\n}"
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "username",
+				"value": "{{basicAuthUsername}}",
+				"type": "string"
+			},
+			{
+				"key": "password",
+				"value": "{{basicAuthPassword}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://127.0.0.1:8002/v1"
+		}
+	]
+}

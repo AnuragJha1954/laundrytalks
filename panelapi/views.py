@@ -8,6 +8,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.contrib.auth.hashers import make_password
+from django.db.models import Q
+
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -26,13 +28,19 @@ from .models import (
     Outlet,
     Product,
     OutletCreds, 
-    Category
+    Category,
+    Order,
+    OrderItem,
+    Customer
 )
 
 from .serializers import (
     OutletSerializer,
     ProductSerializer,
-    OutletCredsSerializer
+    OutletCredsSerializer,
+    OrderSerializer,
+    OrderItemSerializer,
+    CustomerSerializer
 )
 from users.models import CustomUser
 
@@ -570,6 +578,176 @@ def get_products_for_outlet(request, outlet_id):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_summary="Retrieve Orders by Outlet",
+    operation_description="Retrieve a list of all orders for a specific outlet with optional filters for date and customer phone number.",
+    manual_parameters=[
+        openapi.Parameter(
+            'start_date',
+            openapi.IN_QUERY,
+            description="Filter orders starting from this date (YYYY-MM-DD).",
+            type=openapi.TYPE_STRING,
+            format=openapi.FORMAT_DATE,
+        ),
+        openapi.Parameter(
+            'end_date',
+            openapi.IN_QUERY,
+            description="Filter orders up to this date (YYYY-MM-DD).",
+            type=openapi.TYPE_STRING,
+            format=openapi.FORMAT_DATE,
+        ),
+        openapi.Parameter(
+            'customer_phone',
+            openapi.IN_QUERY,
+            description="Filter orders by the customer's phone number.",
+            type=openapi.TYPE_STRING,
+        ),
+    ],
+    responses={
+        200: openapi.Response(
+            description="A list of orders for the specified outlet.",
+            examples={
+                "application/json": {
+                    "error": False,
+                    "orders": [
+                        {
+                            "order_number": "ABC12345",
+                            "date_of_billing": "2024-12-01",
+                            "invoice_number": "INV001",
+                            "total_amount": "1000.00",
+                            "discount_percentage": "10.00",
+                            "total_gst": "180.00",
+                            "total_cgst": "90.00",
+                            "total_sgst": "90.00",
+                            "total_igst": "0.00",
+                            "mode_of_payment": "CASH"
+                        }
+                    ]
+                }
+            }
+        ),
+        404: openapi.Response(
+            description="No orders found for the given filters or outlet not found.",
+            examples={
+                "application/json": {
+                    "error": True,
+                    "detail": "Outlet not found."
+                }
+            }
+        ),
+        500: openapi.Response(
+            description="Internal server error.",
+            examples={
+                "application/json": {
+                    "error": True,
+                    "detail": "An unexpected error occurred."
+                }
+            }
+        ),
+    },
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_orders_by_outlet(request, outlet_id):
+    try:
+        # Validate outlet existence
+        outlet = Outlet.objects.get(id=outlet_id)
+        
+        # Get query parameters
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        customer_phone = request.query_params.get('customer_phone')
+
+        # Build filters
+        filters = Q(outlet=outlet)
+        if start_date:
+            filters &= Q(date_of_billing__gte=start_date)
+        if end_date:
+            filters &= Q(date_of_billing__lte=end_date)
+        if customer_phone:
+            try:
+                customer = Customer.objects.get(phone_number=customer_phone)
+                filters &= Q(customer=customer)
+            except Customer.DoesNotExist:
+                return Response({
+                    "error": True,
+                    "detail": "No orders found for the given customer phone number."
+                }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Query orders with applied filters
+        orders = Order.objects.filter(filters).order_by('-date_of_billing')
+
+        # Serialize results
+        serializer = OrderSerializer(orders, many=True)
+
+        return Response({
+            "error": False,
+            "orders": serializer.data
+        }, status=status.HTTP_200_OK)
+
+    except Outlet.DoesNotExist:
+        return Response({
+            "error": True,
+            "detail": "Outlet not found."
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            "error": True,
+            "detail": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@api_view(['GET'])
+def get_order_details(request, order_number):
+    try:
+        # Fetch the order by order_number
+        order = Order.objects.prefetch_related('order_items', 'customer').get(order_number=order_number)
+        serializer = OrderSerializer(order)
+        
+        return Response({
+            'error': False,
+            'detail': 'Order details fetched successfully',
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+    
+    except Order.DoesNotExist:
+        return Response({
+            'error': True,
+            'detail': 'Order not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'error': True,
+            'detail': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 

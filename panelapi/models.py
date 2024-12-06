@@ -67,6 +67,7 @@ class Customer(models.Model):
     state = models.CharField(max_length=100)
     gst_number = models.CharField(max_length=15, blank=True, null=True)
     outlet = models.ForeignKey(Outlet, on_delete=models.CASCADE, related_name='customers')
+    address = models.TextField(blank=True, null=True)  # Added address field
 
     def __str__(self):
         return self.name
@@ -99,9 +100,12 @@ class Order(models.Model):
     total_sgst = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, blank=True, null=True)
     total_igst = models.DecimalField(max_digits=15, decimal_places=2, default=0.00, blank=True, null=True)
     mode_of_payment = models.CharField(max_length=20, choices=PAYMENT_MODES, default='CASH')
+    # New field to store the total amount after GST
+    total_after_gst = models.DecimalField(max_digits=15, decimal_places=2, default=0.00,blank=True, null=True)
+    total_after_discount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00,blank=True, null=True)
 
     def __str__(self):
-        return f"Order {self.order_number} - {self.outlet.name}"
+        return f"Order {self.order_number} - {self.outlet.owner_name}"
     
     
 

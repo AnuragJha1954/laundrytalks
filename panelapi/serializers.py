@@ -4,7 +4,10 @@ from django.contrib.auth import get_user_model
 from .models import (
     Outlet,
     Product,
-    OutletCreds
+    OutletCreds,
+    Order,
+    OrderItem,
+    Customer
 )
 
 User = get_user_model()
@@ -48,4 +51,64 @@ class OutletCredsSerializer(serializers.ModelSerializer):
         if len(data['password']) < 8:
             raise serializers.ValidationError("Password must be at least 8 characters long.")
         return data
+
+
+
+
+
+
+
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ['name', 'phone_number', 'state', 'gst_number', 'outlet']  # Include 'outlet' as a field
+
+    def validate(self, data):
+        if not data.get('name'):
+            raise serializers.ValidationError("Name is required.")
+        if not data.get('phone_number'):
+            raise serializers.ValidationError("Phone number is required.")
+        if not data.get('state'):
+            raise serializers.ValidationError("State is required.")
+        return data
+
+
+
+
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = ['product', 'quantity', 'total']
+
+class OrderSerializer(serializers.ModelSerializer):
+    customer = CustomerSerializer()
+    order_items = OrderItemSerializer(many=True, write_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            'order_number',
+            'outlet',
+            'customer',
+            'date_of_billing',
+            'invoice_number',
+            'date_of_collection',
+            'total_amount',
+            'discount_percentage',
+            'total_gst',
+            'total_cgst',
+            'total_sgst',
+            'total_igst',
+            'mode_of_payment',
+            'order_items',
+        ]
+
+
+
+
+
 

@@ -20,13 +20,24 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source='category.name')  # Get the category name, not the ID
+    category_name = serializers.CharField(write_only=True)  # Make category_name write-only
 
     class Meta:
         model = Product
         fields = ['item_name', 'rate_per_unit', 'hsn_sac_code', 'category_name']  # Include category_name
-        ref_name = "CounterAPI_ProductSerializer"    
-    
+        ref_name = "CounterAPI_ProductSerializer"
+
+    def create(self, validated_data):
+        # Extract category_name from validated data
+        category_name = validated_data.pop('category_name')
+        
+        # Get the category object or raise an error if not found
+        category = Category.objects.get(name=category_name)
+
+        # Create the product
+        product = Product.objects.create(category=category, **validated_data)
+
+        return product
     
         
         
@@ -37,7 +48,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        fields = ['name', 'phone_number', 'state', 'gst_number', 'outlet']  # Include 'outlet' as a field
+        fields = ['name', 'phone_number', 'state', 'gst_number', 'outlet','address']  # Include 'outlet' as a field
 
     def validate(self, data):
         if not data.get('name'):

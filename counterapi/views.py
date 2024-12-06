@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import render
 
 
 from drf_yasg.utils import swagger_auto_schema
@@ -18,6 +19,10 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+
+from num2words import num2words 
+
+from decimal import Decimal
 
 from panelapi.models import (
     Outlet,
@@ -54,19 +59,16 @@ from .serializers import (
 @permission_classes([AllowAny])  # Allow unrestricted access to get categories
 def get_all_categories(request):
     try:
-        categories = Category.objects.all()  # Fetch all categories
-        serializer = CategorySerializer(categories, many=True)  # Serialize the categories
+        categories = Category.objects.values_list('name', flat=True)  # Fetch only category names as a flat list
         return Response({
             'error': False,
-            'categories': serializer.data  # Only category names will be returned now
+            'categories': list(categories)  # Convert the queryset to a list
         })
     except Exception as e:
         return Response({
             'error': True,
             'detail': str(e)
         }, status=500)
-
-
 
 
 
@@ -245,8 +247,8 @@ def add_customer(request, outlet_id):
         # Fetch the outlet by the provided outlet_id
         outlet = Outlet.objects.get(id=outlet_id)
         
-        # Extract customer details from the request body
-        customer_data = request.data
+        # Extract customer details from the request body and make it mutable
+        customer_data = request.data.copy()  # Make the QueryDict mutable
         
         # Add the outlet to the customer data
         customer_data['outlet'] = outlet.id
@@ -288,6 +290,60 @@ def add_customer(request, outlet_id):
 
 
 
+def print_bill(order_number):
+    try:
+        # Fetch the order details
+        order = Order.objects.select_related('customer', 'outlet').get(order_number=order_number)
+        order_items = OrderItem.objects.filter(order=order)
+
+        # Calculate order totals
+        total_quantity = sum(item.quantity for item in order_items)
+        total_discount = order.total_amount * (order.discount_percentage / 100)
+        net_amount = order.total_amount - total_discount
+        sgst = order.total_sgst
+        cgst = order.total_cgst
+        round_off = round(net_amount + sgst + cgst, 2) - (net_amount + sgst + cgst)
+        grand_amount = net_amount + sgst + cgst + round_off
+        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN')
+
+        # Build context
+        context = {
+            "customer_name": order.customer.name if order.customer else "Walk-in Customer",
+            "billing_date": order.date_of_billing.strftime('%Y-%m-%d'),
+            "customer_address": order.customer.address if order.customer else "Not Provided",  # Address from customer model
+            "invoice_number": order.invoice_number,
+            "customer_phone": order.customer.phone_number if order.customer else "Not Provided",
+            "reference": order.order_number,
+            "gst_number": order.customer.gst_number if order.customer else "Not Provided",  # GST number from customer
+            "collection_date": order.date_of_collection.strftime('%Y-%m-%d') if order.date_of_collection else "Not Provided",
+            "items": [
+                {
+                    "description": item.product.item_name,
+                    "hsn_code": item.product.hsn_sac_code,  # Assuming HSN code is available in Product model
+                    "quantity": item.quantity,
+                    "rate": item.product.rate_per_unit,
+                    "total": item.total,
+                } for item in order_items
+            ],
+            "total_quantity": total_quantity,
+            "total_amount": order.total_amount,
+            "discount_percentage": order.discount_percentage,
+            "discount": total_discount,
+            "net_amount": net_amount,
+            "sgst": sgst,
+            "cgst": cgst,
+            "round_off": round_off,
+            "grand_amount": grand_amount,
+            "total_in_words": total_in_words,
+        }
+
+        # Render the template
+        return render(None, "bill.html", context)
+
+    except Order.DoesNotExist:
+        return Response({'error': True, 'detail': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # {
@@ -446,17 +502,17 @@ def place_order(request, outlet_id):
 
         # Generate invoice number (sequential for outlet)
         last_order = Order.objects.filter(outlet=outlet).order_by('-id').first()
-        invoice_number = f"{outlet_id}-{(int(last_order.invoice_number.split('-')[1]) + 1) if last_order else 1}"
+        invoice_number = f"{outlet_id}{(int(last_order.invoice_number.split('-')[1]) + 1) if last_order else 1}" 
 
         # Calculate totals and create order
-        total_amount = 0.0
+        total_amount = Decimal('0.0')  # Use Decimal for accurate monetary calculation
         with transaction.atomic():
             order = Order.objects.create(
                 order_number=order_number,
                 outlet=outlet,
                 customer=customer,
                 date_of_collection=date_of_collection,
-                total_amount=0.0,  # Placeholder, will be updated later
+                total_amount=total_amount,  # Placeholder, will be updated later
                 discount_percentage=discount_percentage,
                 total_gst=total_gst,
                 total_cgst=total_cgst,
@@ -466,29 +522,35 @@ def place_order(request, outlet_id):
                 invoice_number=invoice_number,
             )
 
-            # Add items to order
+            # Add items to order and calculate total
             for item in items:
                 product_id = item.get('product_id')
-                quantity = item.get('quantity', 1)
+                quantity = Decimal(item.get('quantity', 1))  # Convert quantity to Decimal
 
                 try:
                     product = Product.objects.get(id=product_id)
                 except Product.DoesNotExist:
                     return Response({'error': True, 'detail': f'Product with ID {product_id} not found'}, status=status.HTTP_400_BAD_REQUEST)
 
-                total = product.rate_per_unit * quantity
+                total = Decimal(product.rate_per_unit) * quantity  # Convert rate_per_unit to Decimal
                 OrderItem.objects.create(order=order, product=product, quantity=quantity, total=total)
                 total_amount += total
 
-            # Update order total amount
-            order.total_amount = total_amount - (total_amount * (discount_percentage / 100))
+            # Calculate total after discount
+            total_after_discount = total_amount - (total_amount * (Decimal(discount_percentage) / Decimal('100')))
+
+            # Calculate GST (assuming GST is calculated on the total after discount)
+            gst_amount = total_after_discount * (18 / Decimal('100'))
+            total_after_gst = total_after_discount + gst_amount
+
+            # Update order fields
+            order.total_amount = total_amount  # Total before discount
+            order.total_after_discount = total_after_discount
+            order.total_after_gst = total_after_gst
             order.save()
 
-        return Response({
-            'error': False,
-            'detail': 'Order placed successfully',
-            'order_number': order.order_number,
-        }, status=status.HTTP_201_CREATED)
+        response = print_bill(order.order_number)
+        return response
 
     except Exception as e:
         return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -694,3 +756,31 @@ def add_product(request, outlet_id):
 
 
 
+# def invoice_view(request):
+#     # Context data to pass to the template
+#     context = {
+#         "customer_name": "John Doe",
+#         "billing_date": "2024-12-06",
+#         "customer_address": "123, Sample Street, Sample City",
+#         "invoice_number": "INV-00123",
+#         "customer_phone": "9876543210",
+#         "reference": "REF-2024",
+#         "gst_number": "09ABCDE1234Z5F1",
+#         "collection_date": "2024-12-05",
+#         "items": [
+#             {"description": "Item 1", "hsn_code": "1234", "quantity": 2, "rate": 100, "total": 200},
+#             {"description": "Item 2", "hsn_code": "5678", "quantity": 1, "rate": 500, "total": 500},
+
+#         ],
+#         "total_quantity": 3,
+#         "total_amount": 700,
+#         "discount_percentage": 5,
+#         "discount": 35,
+#         "net_amount": 665,
+#         "sgst": 59.85,
+#         "cgst": 59.85,
+#         "round_off": 0.3,
+#         "grand_amount": 785,
+#         "total_in_words": "Seven Hundred Eighty-Five Rupees Only",
+#     }
+#     return render(request, "bill.html", context)

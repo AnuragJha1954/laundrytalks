@@ -5,7 +5,8 @@ from .models import (
     OutletCreds,
     Customer,
     Order,
-    OrderItem
+    OrderItem,
+    Category
 )
 
 
@@ -33,7 +34,7 @@ class OutletCredsAdmin(admin.ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'phone_number', 'state', 'gst_number')
+    list_display = ('name', 'phone_number', 'state', 'gst_number','address')
     search_fields = ('name', 'phone_number', 'state')
     list_filter = ('state',)
 
@@ -51,3 +52,11 @@ class OrderItemAdmin(admin.ModelAdmin):
     list_display = ('order', 'product', 'quantity', 'total')
     search_fields = ('order__order_number', 'product__item_name')
     list_filter = ('order__date_of_billing', 'product')
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')  # Display the ID and name in the admin list view
+    search_fields = ('name',)     # Add search functionality for the name field
+    ordering = ('name',)          # Order categories alphabetically by name
+    list_per_page = 25            # Paginate the list view with 25 items per page

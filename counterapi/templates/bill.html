@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Invoice</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px; /* Reduced font size */
+            margin: 0;
+            padding: 0;
+            line-height: 1.2; /* Slightly reduced line height */
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: auto;
+            padding: 10px;
+            border: 2px solid black;
+            box-sizing: border-box;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header img {
+            height: 40px; /* Reduced image size */
+        }
+        .header .company-details {
+            text-align: right;
+            font-size: 10px; /* Reduced font size */
+        }
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px; /* Slightly reduced font size */
+            margin: 5px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 5px 0; /* Reduced margin */
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 3px; /* Reduced padding */
+            text-align: left;
+            font-size: 9px; /* Adjusted table font size */
+        }
+        .details-table td {
+            border: none;
+        }
+        .totals-table td {
+            text-align: right;
+        }
+        .totals-table td:first-child {
+            text-align: left;
+        }
+        .footer {
+            font-size: 8px; /* Smaller font for footer */
+            margin-top: 5px;
+        }
+        .footer ol {
+            padding-left: 15px; /* Reduced padding */
+            margin-top: 0;
+        }
+        .footer img {
+            height: 70px; /* Reduced QR code size */
+        }
+        .right-align {
+            text-align: right;
+        }
+        .center-align {
+            text-align: center;
+        }
+        .small-text {
+            font-size: 8px;
+        }
+        /* Enforce table height constraints */
+        .items-table {
+            max-height: 250px; /* Adjust for 10 items */
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <img src="https://static.wixstatic.com/media/29e9be_3a30e960b0d844b787c9b3c107b83cae~mv2.jpg/v1/fill/w_341,h_66,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/New%20Logo_edited.jpg" alt="Company Logo">
+            <div class="company-details">
+                <p><strong>LAUNDRY TALKS PRIVATE LIMITED</strong></p>
+                <p>Regd. Off.: A-130, Sector-63, Noida-201301</p>
+                <p>Plant: A-48, Sector-64, Noida-201301</p>
+                <p>Phone No.: 0120-4346675, 9205032800</p>
+                <p>Email: info@laundrytalks.in</p>
+                <p>GSTIN No.: 09AAFCL6359K1ZX</p>
+            </div>
+        </div>
+
+        <!-- Title Section -->
+        <div class="title">TAX INVOICE</div>
+
+        <!-- Customer and Billing Details -->
+        <table class="details-table">
+            <tr>
+                <td><strong>Customer Details:</strong></td>
+            </tr>
+            <tr>
+                <td>Name: {{ customer_name }}</td>
+                <td>Date of Billing: {{ billing_date }}</td>
+            </tr>
+            <tr>
+                <td>Address: {{ customer_address }}</td>
+                <td>Invoice No.: {{ invoice_number }}</td>
+            </tr>
+            <tr>
+                <td>Phone No.: {{ customer_phone }}</td>
+                <td>Ref.: {{ reference }}</td>
+            </tr>
+            <tr>
+                <td>GST No.: {{ gst_number }}</td>
+                <td>Date of Collection: {{ collection_date }}</td>
+            </tr>
+        </table>
+
+        <!-- Items Table -->
+        <div class="items-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Sr No.</th>
+                        <th>Description</th>
+                        <th>HSN/SAC Code</th>
+                        <th>Qty</th>
+                        <th>Rate Per Unit</th>
+                        <th>Total Amount (Rs.)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.hsn_code }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td class="right-align">{{ item.rate }}</td>
+                        <td class="right-align">{{ item.total }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td colspan="3" class="center-align"><strong>Total</strong></td>
+                        <td class="right-align"><strong>{{ total_quantity }}</strong></td>
+                        <td></td>
+                        <td class="right-align"><strong>₹ {{ total_amount }}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals Section -->
+        <table class="totals-table">
+            <tr>
+                <td>Discount @{{ discount_percentage }}%</td>
+                <td>₹ {{ discount }}</td>
+            </tr>
+            <tr>
+                <td>Net Amount:</td>
+                <td>₹ {{ net_amount }}</td>
+            </tr>
+            <tr>
+                <td>SGST @9%:</td>
+                <td>₹ {{ sgst }}</td>
+            </tr>
+            <tr>
+                <td>CGST @9%:</td>
+                <td>₹ {{ cgst }}</td>
+            </tr>
+            <tr>
+                <td>Round Off:</td>
+                <td>₹ {{ round_off }}</td>
+            </tr>
+            <tr>
+                <td><strong>Grand Amount:</strong></td>
+                <td><strong>₹ {{ grand_amount }}</strong></td>
+            </tr>
+        </table>
+
+        <strong><p>Total (in words): {{ total_in_words }}</p></strong>
+
+        <!-- Footer Section -->
+        <div class="footer">
+            <p>Payment Details:</p>
+            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                <img src="/media/upi_qr/laundry_talks_upi_qr.png" alt="UPI QR Code">
+                <p><strong>UPI ID:</strong> vyapar.171035825947@hdfcbank</p>
+            </div>  
+            <p>Terms & Conditions:</p>
+            <ol>
+                <li>For any loss or damage, compensation amount shall not exceed 10x service charge or garment cost, whichever is lower.</li>
+                <li>For detailed T&C, visit <a href="https://www.laundrytalks.in" target="_blank">www.laundrytalks.in</a></li>
+                <li>Express Service Charges are 100% extra.</li>
+            </ol>
+            <p class="right-align">For Laundry Talks Pvt. Ltd.<br><br><br><br><br>Auth. Signatory</p>
+        </div>
+    </div>
+</body>
+</html>

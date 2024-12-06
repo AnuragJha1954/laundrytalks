@@ -22,4 +22,7 @@ urlpatterns = [
 
     # Method to get products for an outlet
     path('get_products_for_outlet/<int:outlet_id>/', views.get_products_for_outlet, name='get_products_for_outlet'),
+    
+    # Method to get orders for an outlet
+    path('<int:outlet_id>/get-orders/', views.get_orders_by_outlet, name='get_orders_by_outlet'),
 ]

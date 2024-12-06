@@ -6,7 +6,8 @@ from .views import (
     add_customer,
     place_order,
     get_orders_by_outlet,
-    add_product
+    add_product,
+    # invoice_view
 )
 
 urlpatterns = [
@@ -26,4 +27,7 @@ urlpatterns = [
     # Orders
     path('<int:outlet_id>/orders/place/', place_order, name='place_order'),
     path('<int:outlet_id>/orders/', get_orders_by_outlet, name='get_orders_by_outlet'),
+    
+    
+    # path('test/', invoice_view, name='invoice'),
 ]

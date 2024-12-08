@@ -1,5 +1,9 @@
 import random
 import string
+import qrcode
+import base64
+
+from io import BytesIO
 
 from datetime import date
 
@@ -305,6 +309,34 @@ def print_bill(order_number):
         round_off = round(net_amount + sgst + cgst, 2) - (net_amount + sgst + cgst)
         grand_amount = net_amount + sgst + cgst + round_off
         total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN')
+        
+        # UPI payment details
+        upi_id = "vyapar.171035825947@hdfcbank"
+        name = "Laundry Talks"
+        
+        # UPI URL format
+        upi_url = f"upi://pay?pa={upi_id}&pn={name}"
+        
+        # Generate QR Code with only ticket_id
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+
+        qr.add_data(upi_url)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Save QR code image to BytesIO buffer
+        qr_buffer = BytesIO()
+        qr_img.save(qr_buffer)
+        qr_buffer.seek(0)
+        
+        # Convert QR code image to base64
+        qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
+        
 
         # Build context
         context = {
@@ -335,6 +367,7 @@ def print_bill(order_number):
             "round_off": round_off,
             "grand_amount": grand_amount,
             "total_in_words": total_in_words,
+            "qr_code":qr_base64
         }
 
         # Render the template
@@ -500,10 +533,21 @@ def place_order(request, outlet_id):
         # Generate order number
         order_number = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
 
-        # Generate invoice number (sequential for outlet)
+        # Generate invoice number (sequential for outlet, ensuring uniqueness)
         last_order = Order.objects.filter(outlet=outlet).order_by('-id').first()
-        invoice_number = f"{outlet_id}{(int(last_order.invoice_number.split('-')[1]) + 1) if last_order else 1}" 
+        if last_order:
+            last_invoice_number = last_order.invoice_number.split('-')[1] if '-' in last_order.invoice_number else 0
+            next_invoice_number = int(last_invoice_number) + 1
+        else:
+            next_invoice_number = 1
+        
+        invoice_number = f"{outlet_id}-{next_invoice_number}"
 
+        # Check if the generated invoice number already exists
+        while Order.objects.filter(invoice_number=invoice_number).exists():
+            next_invoice_number += 1
+            invoice_number = f"{outlet_id}-{next_invoice_number}"
+        
         # Calculate totals and create order
         total_amount = Decimal('0.0')  # Use Decimal for accurate monetary calculation
         with transaction.atomic():

@@ -24,7 +24,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['item_name', 'rate_per_unit', 'hsn_sac_code', 'category_name']  # Include category_name
+        fields = ['id','item_name', 'rate_per_unit', 'hsn_sac_code', 'category_name']  # Include category_name
         ref_name = "CounterAPI_ProductSerializer"
 
     def create(self, validated_data):

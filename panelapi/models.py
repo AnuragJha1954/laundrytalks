@@ -68,6 +68,7 @@ class Customer(models.Model):
     gst_number = models.CharField(max_length=15, blank=True, null=True)
     outlet = models.ForeignKey(Outlet, on_delete=models.CASCADE, related_name='customers')
     address = models.TextField(blank=True, null=True)  # Added address field
+    reference = models.TextField(blank=True, null=True)  # Added address field
 
     def __str__(self):
         return self.name

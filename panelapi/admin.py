@@ -34,7 +34,7 @@ class OutletCredsAdmin(admin.ModelAdmin):
 
 @admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
-    list_display = ('name', 'phone_number', 'state', 'gst_number','address')
+    list_display = ('name', 'phone_number', 'state', 'gst_number','address','reference')
     search_fields = ('name', 'phone_number', 'state')
     list_filter = ('state',)
 

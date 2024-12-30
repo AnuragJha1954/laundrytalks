@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render
+from django.utils.timezone import now
 
 
 from drf_yasg.utils import swagger_auto_schema
@@ -26,7 +27,7 @@ from rest_framework.permissions import AllowAny
 
 from num2words import num2words 
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 from panelapi.models import (
     Outlet,
@@ -47,8 +48,6 @@ from .serializers import (
 
 
 
-
-# Create your views here.
 
 
 @swagger_auto_schema(
@@ -298,76 +297,82 @@ def print_bill(order_number):
     try:
         # Fetch the order details
         order = Order.objects.select_related('customer', 'outlet').get(order_number=order_number)
-        order_items = OrderItem.objects.filter(order=order)
+        order_items = OrderItem.objects.filter(order=order).select_related('product')
+
+        if not order_items.exists():
+            return Response({'error': True, 'detail': 'No items found in the order'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Get HSN code from the first product
+        first_product = order_items.first().product
+        hsn_code = first_product.hsn_sac_code if hasattr(first_product, 'hsn_sac_code') else "N/A"
 
         # Calculate order totals
         total_quantity = sum(item.quantity for item in order_items)
-        total_discount = order.total_amount * (order.discount_percentage / 100)
-        net_amount = order.total_amount - total_discount
-        sgst = order.total_sgst
-        cgst = order.total_cgst
-        round_off = round(net_amount + sgst + cgst, 2) - (net_amount + sgst + cgst)
-        grand_amount = net_amount + sgst + cgst + round_off
-        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN')
-        
+        total_discount = Decimal(order.total_amount) * (Decimal(order.discount_percentage) / Decimal(100)) if order.discount_percentage > 0 else Decimal(0)
+        net_amount = Decimal(order.total_amount) - total_discount
+        sgst = Decimal(order.total_sgst)
+        cgst = Decimal(order.total_cgst)
+        igst = Decimal(order.total_igst)
+
+        # Calculate round-off and grand amount
+        calculated_total = net_amount + sgst + cgst + igst
+        rounded_total = calculated_total.quantize(Decimal('1'), rounding="ROUND_HALF_UP")  # Round to the nearest integer
+        round_off = rounded_total - calculated_total  # Difference between rounded total and actual total
+        grand_amount = rounded_total  # Grand total is the rounded value
+
+        # Convert grand total into words
+        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace("zero paise", "").title()
+
         # UPI payment details
         upi_id = "vyapar.171035825947@hdfcbank"
         name = "Laundry Talks"
-        
-        # UPI URL format
-        upi_url = f"upi://pay?pa={upi_id}&pn={name}"
-        
-        # Generate QR Code with only ticket_id
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
 
+        # Generate UPI URL and QR Code
+        upi_url = f"upi://pay?pa={upi_id}&pn={name}"
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
         qr.add_data(upi_url)
         qr.make(fit=True)
         qr_img = qr.make_image(fill_color="black", back_color="white")
-        
+
         # Save QR code image to BytesIO buffer
         qr_buffer = BytesIO()
         qr_img.save(qr_buffer)
         qr_buffer.seek(0)
-        
+
         # Convert QR code image to base64
         qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
-        
 
-        # Build context
+        # Build context for the template
         context = {
             "customer_name": order.customer.name if order.customer else "Walk-in Customer",
             "billing_date": order.date_of_billing.strftime('%Y-%m-%d'),
-            "customer_address": order.customer.address if order.customer else "Not Provided",  # Address from customer model
+            "customer_address": order.customer.address if order.customer else "Not Provided",
             "invoice_number": order.invoice_number,
             "customer_phone": order.customer.phone_number if order.customer else "Not Provided",
-            "reference": order.order_number,
-            "gst_number": order.customer.gst_number if order.customer else "Not Provided",  # GST number from customer
+            "reference": order.customer.reference if order.customer and hasattr(order.customer, "reference") else "N/A",
+            "gst_number": order.customer.gst_number if order.customer else "Not Provided",
             "collection_date": order.date_of_collection.strftime('%Y-%m-%d') if order.date_of_collection else "Not Provided",
             "items": [
                 {
                     "description": item.product.item_name,
-                    "hsn_code": item.product.hsn_sac_code,  # Assuming HSN code is available in Product model
+                    "hsn_code": hsn_code,
                     "quantity": item.quantity,
-                    "rate": item.product.rate_per_unit,
-                    "total": item.total,
+                    "rate": round(item.product.rate_per_unit, 2),
+                    "total": round(item.total, 2),
                 } for item in order_items
             ],
             "total_quantity": total_quantity,
-            "total_amount": order.total_amount,
-            "discount_percentage": order.discount_percentage,
-            "discount": total_discount,
-            "net_amount": net_amount,
-            "sgst": sgst,
-            "cgst": cgst,
-            "round_off": round_off,
-            "grand_amount": grand_amount,
-            "total_in_words": total_in_words,
-            "qr_code":qr_base64
+            "total_amount": "{:.2f}".format(order.total_amount),
+            "discount_percentage": "{:.2f}".format(order.discount_percentage) if order.discount_percentage > 0 else "0.00",
+            "discount": "{:.2f}".format(total_discount),
+            "net_amount": "{:.2f}".format(net_amount),
+            "sgst": "{:.2f}".format(sgst) if sgst > 0 else None,
+            "cgst": "{:.2f}".format(cgst) if cgst > 0 else None,
+            "igst": "{:.2f}".format(igst) if igst > 0 else None,
+            "round_off": "{:.2f}".format(round_off),
+            "grand_amount": "{:.2f}".format(grand_amount),
+            "total_in_words": total_in_words + " Only.",
+            "qr_code": qr_base64
         }
 
         # Render the template
@@ -377,7 +382,6 @@ def print_bill(order_number):
         return Response({'error': True, 'detail': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 # {
 #   "customer_phone": "9876543210",
@@ -514,11 +518,7 @@ def place_order(request, outlet_id):
         data = request.data
         customer_phone = data.get('customer_phone')
         date_of_collection = data.get('date_of_collection')
-        discount_percentage = data.get('discount_percentage', 0.0)
-        total_gst = data.get('total_gst', 0.0)
-        total_cgst = data.get('total_cgst', 0.0)
-        total_sgst = data.get('total_sgst', 0.0)
-        total_igst = data.get('total_igst', 0.0)
+        discount_percentage = Decimal(data.get('discount_percentage', 0.0)).quantize(Decimal('0.00'))
         mode_of_payment = data.get('mode_of_payment', 'CASH')
         items = data.get('order_items')
 
@@ -528,28 +528,36 @@ def place_order(request, outlet_id):
         # Validate customer
         customer = None
         if customer_phone:
-            customer, created = Customer.objects.get_or_create(phone_number=customer_phone, defaults={'name': 'Unknown'})
+            customer, created = Customer.objects.get_or_create(
+                phone_number=customer_phone, defaults={'name': 'Unknown'}
+            )
 
         # Generate order number
         order_number = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
 
-        # Generate invoice number (sequential for outlet, ensuring uniqueness)
-        last_order = Order.objects.filter(outlet=outlet).order_by('-id').first()
+        # Generate invoice number in the format: outlet_idLTmmyysequential_number
+        current_date = now()
+        month_year = current_date.strftime('%m%y')
+        last_order = Order.objects.filter(outlet=outlet, invoice_number__startswith=f"{outlet_id}LT{month_year}").order_by('-id').first()
+
         if last_order:
-            last_invoice_number = last_order.invoice_number.split('-')[1] if '-' in last_order.invoice_number else 0
-            next_invoice_number = int(last_invoice_number) + 1
+            # Extract the sequential number from the end of the invoice number
+            sequential_part = last_order.invoice_number[len(f"{outlet_id}LT{month_year}"):]
+            if sequential_part.isdigit():
+                last_invoice_number = int(sequential_part)
+            else:
+                return Response({'error': True, 'detail': 'Invalid format for last invoice number'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            next_invoice_number = last_invoice_number + 1
         else:
             next_invoice_number = 1
-        
-        invoice_number = f"{outlet_id}-{next_invoice_number}"
 
-        # Check if the generated invoice number already exists
-        while Order.objects.filter(invoice_number=invoice_number).exists():
-            next_invoice_number += 1
-            invoice_number = f"{outlet_id}-{next_invoice_number}"
+        # Construct the new invoice number
+        invoice_number = f"{outlet_id}LT{month_year}{next_invoice_number}"
+
         
+        # print(invoice_number)
         # Calculate totals and create order
-        total_amount = Decimal('0.0')  # Use Decimal for accurate monetary calculation
+        total_amount = Decimal('0.00')  # Use Decimal for accurate monetary calculation
         with transaction.atomic():
             order = Order.objects.create(
                 order_number=order_number,
@@ -558,10 +566,6 @@ def place_order(request, outlet_id):
                 date_of_collection=date_of_collection,
                 total_amount=total_amount,  # Placeholder, will be updated later
                 discount_percentage=discount_percentage,
-                total_gst=total_gst,
-                total_cgst=total_cgst,
-                total_sgst=total_sgst,
-                total_igst=total_igst,
                 mode_of_payment=mode_of_payment,
                 invoice_number=invoice_number,
             )
@@ -569,36 +573,52 @@ def place_order(request, outlet_id):
             # Add items to order and calculate total
             for item in items:
                 product_id = item.get('product_id')
-                quantity = Decimal(item.get('quantity', 1))  # Convert quantity to Decimal
+                quantity = Decimal(item.get('quantity', 1)).quantize(Decimal('0.00'))
 
                 try:
                     product = Product.objects.get(id=product_id)
                 except Product.DoesNotExist:
                     return Response({'error': True, 'detail': f'Product with ID {product_id} not found'}, status=status.HTTP_400_BAD_REQUEST)
 
-                total = Decimal(product.rate_per_unit) * quantity  # Convert rate_per_unit to Decimal
+                total = (Decimal(product.rate_per_unit) * quantity).quantize(Decimal('0.00'))
                 OrderItem.objects.create(order=order, product=product, quantity=quantity, total=total)
                 total_amount += total
 
             # Calculate total after discount
-            total_after_discount = total_amount - (total_amount * (Decimal(discount_percentage) / Decimal('100')))
+            total_after_discount = total_amount - (total_amount * (discount_percentage / Decimal('100')))
 
-            # Calculate GST (assuming GST is calculated on the total after discount)
-            gst_amount = total_after_discount * (18 / Decimal('100'))
-            total_after_gst = total_after_discount + gst_amount
+            # Determine GST type
+            customer_state = customer.state.lower() if customer and customer.state else ""
+            is_uttar_pradesh = (customer_state == "uttar pradesh")
+            
+            if is_uttar_pradesh:
+                cgst = total_after_discount * (Decimal('9') / Decimal('100'))
+                sgst = total_after_discount * (Decimal('9') / Decimal('100'))
+                igst = Decimal('0.00')
+            else:
+                cgst = Decimal('0.00')
+                sgst = Decimal('0.00')
+                igst = total_after_discount * (Decimal('18') / Decimal('100'))
+
+            # Final total with GST
+            total_gst = (cgst + sgst + igst).quantize(Decimal('0.00'))
+            total_after_gst = (total_after_discount + total_gst).quantize(Decimal('0.00'))
 
             # Update order fields
-            order.total_amount = total_amount  # Total before discount
-            order.total_after_discount = total_after_discount
+            order.total_amount = total_amount.quantize(Decimal('0.00'))  # Total before discount
+            order.total_after_discount = total_after_discount.quantize(Decimal('0.00'))
+            order.total_gst = total_gst
+            order.total_cgst = cgst.quantize(Decimal('0.00'))
+            order.total_sgst = sgst.quantize(Decimal('0.00'))
+            order.total_igst = igst.quantize(Decimal('0.00'))
             order.total_after_gst = total_after_gst
             order.save()
 
-        response = print_bill(order.order_number)
+        response = print_bill(order.order_number)  # Assuming print_bill is defined elsewhere
         return response
 
     except Exception as e:
         return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 

@@ -48,7 +48,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        fields = ['name', 'phone_number', 'state', 'gst_number', 'outlet','address']  # Include 'outlet' as a field
+        fields = ['name', 'phone_number', 'state', 'gst_number', 'outlet','address','reference']  # Include 'outlet' as a field
 
     def validate(self, data):
         if not data.get('name'):

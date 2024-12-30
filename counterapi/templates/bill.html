@@ -145,12 +145,17 @@
                         <th>Total Amount (Rs.)</th>
                     </tr>
                 </thead>
+                
                 <tbody>
                     {% for item in items %}
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         <td>{{ item.description }}</td>
-                        <td>{{ item.hsn_code }}</td>
+                        <td>
+                            {% if forloop.first %}
+                            {{ item.hsn_code }}
+                            {% endif %}
+                        </td>
                         <td>{{ item.quantity }}</td>
                         <td class="right-align">{{ item.rate }}</td>
                         <td class="right-align">{{ item.total }}</td>
@@ -158,7 +163,7 @@
                     {% endfor %}
                     <tr>
                         <td colspan="3" class="center-align"><strong>Total</strong></td>
-                        <td class="right-align"><strong>{{ total_quantity }}</strong></td>
+                        <td class="left-align"><strong>{{ total_quantity }}</strong></td>
                         <td></td>
                         <td class="right-align"><strong>₹ {{ total_amount }}</strong></td>
                     </tr>
@@ -168,22 +173,36 @@
 
         <!-- Totals Section -->
         <table class="totals-table">
+            {% if discount %}
             <tr>
-                <td>Discount @{{ discount_percentage }}%</td>
+                <td>Discount @{{ discount_percentage }}%:</td>
                 <td>₹ {{ discount }}</td>
             </tr>
+            {% endif %}
+
             <tr>
                 <td>Net Amount:</td>
                 <td>₹ {{ net_amount }}</td>
             </tr>
             <tr>
+                {% if sgst %}
                 <td>SGST @9%:</td>
                 <td>₹ {{ sgst }}</td>
+                {% endif %}
             </tr>
             <tr>
+                {% if cgst %}
                 <td>CGST @9%:</td>
                 <td>₹ {{ cgst }}</td>
+                {% endif %}
             </tr>
+            <tr>
+                {% if igst %}
+                <td>IGST @18%:</td>
+                <td>₹ {{ igst }}</td>
+                {% endif %}
+            </tr>
+            
             <tr>
                 <td>Round Off:</td>
                 <td>₹ {{ round_off }}</td>

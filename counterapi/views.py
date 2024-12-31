@@ -5,7 +5,7 @@ import base64
 
 from io import BytesIO
 
-from datetime import date
+from datetime import date, datetime
 
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
@@ -525,6 +525,13 @@ def place_order(request, outlet_id):
         if not items:
             return Response({'error': True, 'detail': 'Order items are required'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Parse and format date_of_collection
+        if date_of_collection:
+            try:
+                date_of_collection = datetime.fromisoformat(date_of_collection).strftime('%Y-%m-%d')
+            except ValueError:
+                return Response({'error': True, 'detail': 'Invalid date format. Use ISO 8601 format.'}, status=status.HTTP_400_BAD_REQUEST)
+
         # Validate customer
         customer = None
         if customer_phone:
@@ -554,8 +561,6 @@ def place_order(request, outlet_id):
         # Construct the new invoice number
         invoice_number = f"{outlet_id}LT{month_year}{next_invoice_number}"
 
-        
-        # print(invoice_number)
         # Calculate totals and create order
         total_amount = Decimal('0.00')  # Use Decimal for accurate monetary calculation
         with transaction.atomic():

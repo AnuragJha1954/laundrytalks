@@ -25,8 +25,14 @@ class OutletSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['item_name', 'rate_per_unit', 'hsn_sac_code', 'category']
+        fields = ['item_name', 'rate_per_unit', 'hsn_sac_code', 'category']  # Keep the category key
         ref_name = "PanelAPI_ProductSerializer"
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Replace the 'category' field with the category name
+        representation['category'] = instance.category.name
+        return representation
 
     def validate(self, data):
         if not data.get('item_name'):
@@ -41,10 +47,12 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 
+
 class OutletCredsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OutletCreds
-        fields = ['username', 'password', 'user', 'outlet']
+        fields = ['username', 'password', 'user', 'outlet', 'email']
+        depth =  1
 
     def validate(self, data):
         # Ensure the password meets the criteria

@@ -407,8 +407,8 @@ def add_product(request, outlet_id,user_id):
 )
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def manage_outlet_creds(request, outlet_id,user_id):
-        # Validate token from the Authorization header
+def manage_outlet_creds(request, outlet_id, user_id):
+    # Validate token from the Authorization header
     token_key = request.headers.get("Authorization")
     if not token_key:
         return Response({"error": True, "detail": "Authorization token is missing"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -458,19 +458,34 @@ def manage_outlet_creds(request, outlet_id,user_id):
                 )
             else:
                 return Response({"error": True, "detail": "Password is required to update credentials."}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         else:
             # If no credentials found, create a new user and save the credentials
-            username = request.data.get("username")
+            email = request.data.get("email")
             password = request.data.get("password")
-            if not username or not password:
-                return Response({"error": True, "detail": "Username and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+            if not email or not password:
+                return Response({"error": True, "detail": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Extract username from email
+            username_base = email.split('@')[0]
+            username = username_base
+
+            # Ensure the username is unique
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{username_base}{counter}"
+                counter += 1
 
             # Create a new user in the CustomUser model
-            user = User.objects.create(username=username, password=make_password(password), role="Shop Owner")  # Create user with hashed password
+            user = User.objects.create(
+                username=username,
+                email=email,
+                password=make_password(password),
+                role="Shop Owner"
+            )  # Create user with hashed password
 
             # Create the outlet credentials
-            outlet_creds = OutletCreds.objects.create(username=username, password=password, user=user, outlet=outlet)
+            outlet_creds = OutletCreds.objects.create(username=username,email=email, password=password, user=user, outlet=outlet)
 
             return Response(
                 {"error": False, "detail": "User and Outlet credentials added successfully."},
@@ -482,6 +497,7 @@ def manage_outlet_creds(request, outlet_id,user_id):
             {"error": True, "detail": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
 
 
 

@@ -90,16 +90,14 @@ def user_login(request):
 
                     outlet_details = {
                         "id": outlet.id,
-                        "name": outlet.name,
+                        "owner_name": outlet.owner_name,
                         "address": outlet.address,
-                        "phone_number": outlet.phone_number,
-                        "gst_number": outlet.gst_number,
-                        "opening_hours": outlet.opening_hours,
-                        "is_active": outlet.is_active,
+                        "location": outlet.location,
+                        "company_owned": outlet.company_owned,
+                        "owner_details": outlet.owner_details,
                     }
 
                     response_data.update({
-                        "role": "Shop Owner",
                         "outlet_details": outlet_details,
                     })
 

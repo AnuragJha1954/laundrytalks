@@ -15,7 +15,7 @@ urlpatterns = [
     path('add_product/<int:user_id>/<int:outlet_id>/', views.add_product, name='add_product_to_outlet'),
 
     # Method to create/update outlet creds
-    path('manage_outlet_creds/<int:outlet_id>/', views.manage_outlet_creds, name='create_or_update_outlet_creds'),
+    path('manage_outlet_creds/<int:outlet_id>/<int:user_id>/', views.manage_outlet_creds, name='create_or_update_outlet_creds'),
 
     # Method to get outlet creds
     path('get_outlet_creds/<int:outlet_id>/', views.get_outlet_creds, name='get_outlet_creds'),

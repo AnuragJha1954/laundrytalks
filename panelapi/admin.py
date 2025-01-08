@@ -28,7 +28,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(OutletCreds)
 class OutletCredsAdmin(admin.ModelAdmin):
-    list_display = ('username', 'user', 'outlet')
+    list_display = ('username', 'user', 'outlet','email')
     search_fields = ('username', 'user__username', 'outlet__owner_name')
 
 

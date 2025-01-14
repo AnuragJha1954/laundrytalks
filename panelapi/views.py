@@ -427,7 +427,7 @@ def manage_outlet_creds(request, outlet_id, user_id):
     # Check if the requesting user has the "Master Admin" role
     if requesting_user.role != 'Master Admin':
         return Response(
-            {"error": True, "detail": "Only a Master Admin can add products"},
+            {"error": True, "detail": "Only a Master Admin can add credentials"},
             status=status.HTTP_403_FORBIDDEN
         )
     try:
@@ -438,7 +438,11 @@ def manage_outlet_creds(request, outlet_id, user_id):
             return Response({"error": "Outlet not found"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if outlet credentials already exist
-        outlet_creds = OutletCreds.objects.filter(outlet=outlet, username=request.data.get("username")).first()
+        outlet_creds = OutletCreds.objects.filter(
+            outlet=outlet, 
+            username=request.data.get("username"),
+            role=request.data.get("role")  # Filter by role
+        ).first()
 
         if outlet_creds:
             # If credentials exist, update the password
@@ -463,6 +467,7 @@ def manage_outlet_creds(request, outlet_id, user_id):
             # If no credentials found, create a new user and save the credentials
             email = request.data.get("email")
             password = request.data.get("password")
+            role = request.data.get("role", "Shop Owner")
             if not email or not password:
                 return Response({"error": True, "detail": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -481,11 +486,18 @@ def manage_outlet_creds(request, outlet_id, user_id):
                 username=username,
                 email=email,
                 password=make_password(password),
-                role="Shop Owner"
+                role=role
             )  # Create user with hashed password
 
             # Create the outlet credentials
-            outlet_creds = OutletCreds.objects.create(username=username,email=email, password=password, user=user, outlet=outlet)
+            outlet_creds = OutletCreds.objects.create(
+                username=username,
+                email=email,
+                password=password,
+                role=role,
+                user=user,
+                outlet=outlet
+            )
 
             return Response(
                 {"error": False, "detail": "User and Outlet credentials added successfully."},

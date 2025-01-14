@@ -51,14 +51,16 @@ class ProductSerializer(serializers.ModelSerializer):
 class OutletCredsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OutletCreds
-        fields = ['username', 'password', 'user', 'outlet', 'email']
-        depth =  1
+        fields = ['username', 'password', 'user', 'outlet', 'email', 'role']
+        depth = 1
 
     def validate(self, data):
-        # Ensure the password meets the criteria
         if len(data['password']) < 8:
             raise serializers.ValidationError("Password must be at least 8 characters long.")
+        if data.get('role') not in dict(OutletCreds.ROLE_CHOICES):
+            raise serializers.ValidationError("Invalid role provided.")
         return data
+
 
 
 

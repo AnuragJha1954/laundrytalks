@@ -48,14 +48,19 @@ class Product(models.Model):
 
 
 class OutletCreds(models.Model):
+    ROLE_CHOICES = [
+        ('Counter Operator', 'Counter Operator'),
+        ('Shop Owner', 'Shop Owner'),
+    ]
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=254,blank=True, null=True)  # Added email field
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='Shop Owner')  # Role field added
     password = models.CharField(max_length=128)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="outlet_creds")
     outlet = models.ForeignKey("Outlet", on_delete=models.CASCADE, related_name="credentials")
 
     def __str__(self):
-        return f"{self.username} - {self.user.username} - {self.outlet.owner_name}"
+        return f"{self.username} - {self.role} - {self.outlet.owner_name}"
 
 
 

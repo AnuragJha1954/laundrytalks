@@ -7,7 +7,7 @@ from datetime import date, timedelta
 class CustomUserLoginSerializer(serializers.Serializer):
     username = serializers.EmailField()
     password = serializers.CharField(write_only=True)
-    role = serializers.ChoiceField(choices=["Master Admin", "Shop Owner"], write_only=True)
+    role = serializers.ChoiceField(choices=["Master Admin", "Shop Owner", "Counter Operator"], write_only=True)
 
     def validate(self, data):
         email = data.get('username')

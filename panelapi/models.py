@@ -127,6 +127,7 @@ class OrderItem(models.Model):
     product = models.ForeignKey("Product", on_delete=models.CASCADE, related_name="order_items")
     quantity = models.PositiveIntegerField(default=0)
     total = models.DecimalField(max_digits=15, decimal_places=2)
+    hanger = models.BooleanField(default=False)  # New field
 
     def __str__(self):
         return f"Order {self.order.order_number} - {self.product.item_name}"

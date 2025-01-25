@@ -302,9 +302,9 @@ def print_bill(order_number):
         if not order_items.exists():
             return Response({'error': True, 'detail': 'No items found in the order'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Get HSN code from the first product
-        first_product = order_items.first().product
-        hsn_code = first_product.hsn_sac_code if hasattr(first_product, 'hsn_sac_code') else "N/A"
+        # # Get HSN code from the first product
+        # first_product = order_items.first().product
+        # hsn_code = first_product.hsn_sac_code if hasattr(first_product, 'hsn_sac_code') else "N/A"
 
         # Calculate order totals
         total_quantity = sum(item.quantity for item in order_items)
@@ -355,7 +355,8 @@ def print_bill(order_number):
             "items": [
                 {
                     "description": item.product.item_name,
-                    "hsn_code": hsn_code,
+                    "hanger": item.hanger,  # Include the hanger value
+                    "hsn_code": item.product.hsn_sac_code if hasattr(item.product, "hsn_sac_code") else " ",
                     "quantity": item.quantity,
                     "rate": round(item.product.rate_per_unit, 2),
                     "total": round(item.total, 2),
@@ -579,6 +580,7 @@ def place_order(request, outlet_id):
             for item in items:
                 product_id = item.get('product_id')
                 quantity = Decimal(item.get('quantity', 1)).quantize(Decimal('0.00'))
+                hanger = item.get('hanger', False)  # Extract hanger value
 
                 try:
                     product = Product.objects.get(id=product_id)
@@ -586,7 +588,7 @@ def place_order(request, outlet_id):
                     return Response({'error': True, 'detail': f'Product with ID {product_id} not found'}, status=status.HTTP_400_BAD_REQUEST)
 
                 total = (Decimal(product.rate_per_unit) * quantity).quantize(Decimal('0.00'))
-                OrderItem.objects.create(order=order, product=product, quantity=quantity, total=total)
+                OrderItem.objects.create(order=order, product=product, quantity=quantity, total=total, hanger=hanger)
                 total_amount += total
 
             # Calculate total after discount

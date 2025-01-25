@@ -72,7 +72,7 @@ def user_login(request):
                 # Role-specific logic
                 if role == "Master Admin":
                     response_data["role"] = "Master Admin"
-                elif role == "Shop Owner":
+                elif role == "Shop Owner" or role == "Counter Operator":
                     # Fetch outlet details
                     outlet_creds = OutletCreds.objects.filter(user=user).first()
                     if not outlet_creds:

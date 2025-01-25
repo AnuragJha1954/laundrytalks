@@ -25,4 +25,6 @@ urlpatterns = [
     
     # Method to get orders for an outlet
     path('<int:outlet_id>/get-orders/', views.get_orders_by_outlet, name='get_orders_by_outlet'),
+    
+    path('generate-bill/<str:order_number>/', views.generate_bill, name='generate_bill'),
 ]

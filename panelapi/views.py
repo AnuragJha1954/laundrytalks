@@ -1,14 +1,20 @@
 import random
 import string
 import openpyxl
+import qrcode
+import base64
 
 from io import BytesIO
+from num2words import num2words
+from decimal import Decimal
+
 
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q
+from django.shortcuts import render
 
 
 from drf_yasg.utils import swagger_auto_schema
@@ -336,7 +342,7 @@ def add_products_excel(request, user_id):
 )
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def add_product(request, outlet_id,user_id):
+def add_product(request, outlet_id, user_id):
     # Validate token from the Authorization header
     token_key = request.headers.get("Authorization")
     if not token_key:
@@ -360,8 +366,21 @@ def add_product(request, outlet_id,user_id):
         except Outlet.DoesNotExist:
             return Response({"error": "Outlet not found"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Parse and validate request data
+        data = request.data.copy()
+        category_name = data.get('category', '').strip()
+        if not category_name:
+            return Response({"error": True, "detail": "Category name is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Retrieve or validate the category (case-insensitive)
+        try:
+            category = Category.objects.get(name__iexact=category_name)
+            data['category'] = category.id
+        except Category.DoesNotExist:
+            return Response({"error": True, "detail": f"Category '{category_name}' not found."}, status=status.HTTP_400_BAD_REQUEST)
+
         # Serialize the request data
-        serializer = ProductSerializer(data=request.data)
+        serializer = ProductSerializer(data=data)
         if serializer.is_valid():
             # Save the product
             product = serializer.save()
@@ -531,12 +550,12 @@ def manage_outlet_creds(request, outlet_id, user_id):
 @permission_classes([AllowAny])
 def get_outlet_creds(request, outlet_id):
     try:
-        # Retrieve the outlet credentials for the specified outlet ID
-        outlet_creds = OutletCreds.objects.filter(outlet_id=outlet_id).first()
+        # Retrieve all outlet credentials for the specified outlet ID
+        outlet_creds = OutletCreds.objects.filter(outlet_id=outlet_id)
 
-        if outlet_creds:
+        if outlet_creds.exists():
             # If credentials are found, serialize and return them
-            serializer = OutletCredsSerializer(outlet_creds)
+            serializer = OutletCredsSerializer(outlet_creds, many=True)
             return Response(
                 {"error": False, "outlet_creds": serializer.data},
                 status=status.HTTP_200_OK
@@ -544,7 +563,7 @@ def get_outlet_creds(request, outlet_id):
         else:
             # If no credentials are found for the outlet, return a 404 response
             return Response(
-                {"error": True, "detail": "Credentials not found"},
+                {"error": True, "detail": "No credentials found for the specified outlet."},
                 status=status.HTTP_404_NOT_FOUND
             )
     except Exception as e:
@@ -779,6 +798,149 @@ def get_order_details(request, order_number):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_description="Generate and render a bill for a specific order using the order number.",
+    manual_parameters=[
+        openapi.Parameter(
+            name="order_number",
+            in_=openapi.IN_PATH,
+            description="Unique identifier for the order.",
+            type=openapi.TYPE_STRING,
+            required=True,
+        )
+    ],
+    responses={
+        200: openapi.Response(
+            description="HTML content of the rendered bill.",
+            examples={
+                "text/html": "<html>...rendered bill...</html>"
+            },
+        ),
+        404: openapi.Response(
+            description="Order not found or no items in the order.",
+            examples={
+                "application/json": {
+                    "error": True,
+                    "detail": "Order not found",
+                },
+            },
+        ),
+        500: openapi.Response(
+            description="Internal server error.",
+            examples={
+                "application/json": {
+                    "error": True,
+                    "detail": "An unexpected error occurred.",
+                },
+            },
+        ),
+    }
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def generate_bill(request, order_number):
+    try:
+        # Fetch the order and related data
+        order = Order.objects.select_related('customer', 'outlet').get(order_number=order_number)
+        order_items = OrderItem.objects.filter(order=order).select_related('product')
+
+        if not order_items.exists():
+            return JsonResponse({'error': True, 'detail': 'No items found in the order'}, status=404)
+
+        # Get HSN code from the first product
+        # first_product = order_items.first().product
+        # hsn_code = first_product.hsn_sac_code if first_product.hsn_sac_code else "N/A"
+
+        # Calculate totals
+        total_quantity = sum(item.quantity for item in order_items)
+        total_discount = Decimal(order.total_amount) * (Decimal(order.discount_percentage) / Decimal(100)) if order.discount_percentage > 0 else Decimal(0)
+        net_amount = Decimal(order.total_amount) - total_discount
+        sgst = Decimal(order.total_sgst or 0)
+        cgst = Decimal(order.total_cgst or 0)
+        igst = Decimal(order.total_igst or 0)
+
+        # Calculate round-off and grand total
+        calculated_total = net_amount + sgst + cgst + igst
+        rounded_total = calculated_total.quantize(Decimal('1'), rounding="ROUND_HALF_UP")
+        round_off = rounded_total - calculated_total
+        grand_amount = rounded_total
+
+        # Convert grand total to words
+        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace(", zero paise", "").title()
+
+        # UPI details and QR Code
+        upi_id = "vyapar.171035825947@hdfcbank"
+        name = "Laundry Talks"
+        upi_url = f"upi://pay?pa={upi_id}&pn={name}"
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+        qr.add_data(upi_url)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+
+        # Convert QR code image to base64
+        qr_buffer = BytesIO()
+        qr_img.save(qr_buffer)
+        qr_buffer.seek(0)
+        qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
+
+        # Prepare context for rendering
+        context = {
+            "customer_name": order.customer.name if order.customer else "Walk-in Customer",
+            "billing_date": order.date_of_billing.strftime('%Y-%m-%d'),
+            "customer_address": order.customer.address if order.customer else "Not Provided",
+            "invoice_number": order.invoice_number,
+            "customer_phone": order.customer.phone_number if order.customer else "Not Provided",
+            "reference": order.customer.reference if order.customer else "N/A",
+            "gst_number": order.customer.gst_number if order.customer else "Not Provided",
+            "collection_date": order.date_of_collection.strftime('%Y-%m-%d') if order.date_of_collection else "Not Provided",
+            "items": [
+                {
+                    "description": item.product.item_name,
+                    "hanger": item.hanger,  # Include the hanger value
+                    "hsn_code": item.product.hsn_sac_code if hasattr(item.product, "hsn_sac_code") else " ",
+                    "quantity": item.quantity,
+                    "rate": round(item.product.rate_per_unit, 2),
+                    "total": round(item.total, 2),
+                } for item in order_items
+            ],
+            "total_quantity": total_quantity,
+            "total_amount": "{:.2f}".format(order.total_amount),
+            "discount_percentage": "{:.2f}".format(order.discount_percentage) if order.discount_percentage > 0 else "0.00",
+            "discount": "{:.2f}".format(total_discount),
+            "net_amount": "{:.2f}".format(net_amount),
+            "sgst": "{:.2f}".format(sgst) if sgst > 0 else None,
+            "cgst": "{:.2f}".format(cgst) if cgst > 0 else None,
+            "igst": "{:.2f}".format(igst) if igst > 0 else None,
+            "round_off": "{:.2f}".format(round_off),
+            "grand_amount": "{:.2f}".format(grand_amount),
+            "total_in_words": total_in_words + " Only.",
+            "qr_code": qr_base64
+        }
+
+        # Render the template with the context
+        return render(request, "bill.html", context)
+
+    except Order.DoesNotExist:
+        return JsonResponse({'error': True, 'detail': 'Order not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': True, 'detail': str(e)}, status=500)
 
 
 

@@ -883,7 +883,7 @@ def generate_bill(request, order_number):
         grand_amount = rounded_total
 
         # Convert grand total to words
-        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace(", zero paise", "").title()
+        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace(", zero paise", "").replace("-", " ").replace(",", "").title()
 
         # UPI details and QR Code
         upi_id = "vyapar.171035825947@hdfcbank"
@@ -941,6 +941,155 @@ def generate_bill(request, order_number):
         return JsonResponse({'error': True, 'detail': 'Order not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': True, 'detail': str(e)}, status=500)
+
+
+
+
+
+
+
+
+
+
+
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_description="Update the discount percentage for an order, recalculate totals, and apply GST.",
+    manual_parameters=[
+        openapi.Parameter(
+            'outlet_id', openapi.IN_PATH, description="ID of the outlet", type=openapi.TYPE_INTEGER
+        ),
+        openapi.Parameter(
+            'order_number', openapi.IN_PATH, description="Order number", type=openapi.TYPE_STRING
+        )
+    ],
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            'discount_percentage': openapi.Schema(
+                type=openapi.TYPE_NUMBER, format='decimal', description="New discount percentage to apply"
+            )
+        },
+        required=['discount_percentage']
+    ),
+    responses={
+        200: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'error': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                'detail': openapi.Schema(type=openapi.TYPE_STRING),
+                'order': openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'order_number': openapi.Schema(type=openapi.TYPE_STRING),
+                        'total_amount': openapi.Schema(type=openapi.TYPE_NUMBER, format='decimal'),
+                        'total_after_discount': openapi.Schema(type=openapi.TYPE_NUMBER, format='decimal'),
+                        'total_gst': openapi.Schema(type=openapi.TYPE_NUMBER, format='decimal'),
+                        'total_after_gst': openapi.Schema(type=openapi.TYPE_NUMBER, format='decimal')
+                    }
+                )
+            }
+        ),
+        400: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'error': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                'detail': openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        ),
+        404: openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'error': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                'detail': openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        )
+    }
+)
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def update_order_discount(request, outlet_id, order_number,user_id):
+        # Validate token from the Authorization header
+    token_key = request.headers.get("Authorization")
+    if not token_key:
+        return Response({"error": True, "detail": "Authorization token is missing"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    try:
+        token = Token.objects.get(key=token_key)
+        if token.user.id != user_id:  # Ensure token matches the user ID
+            return Response(
+                {"error": True, "detail": "Token is not valid. Invalid Authentication Header"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        requesting_user = token.user
+    except Token.DoesNotExist:
+        return Response({"error": True, "detail": "Invalid token"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    # Check if the requesting user has the "Master Admin" role
+    if requesting_user.role != 'Master Admin':
+        return Response(
+            {"error": True, "detail": "Only a Master Admin can edit orders"},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    try:
+        # Validate outlet
+        try:
+            outlet = Outlet.objects.get(id=outlet_id)
+        except Outlet.DoesNotExist:
+            return Response({'error': True, 'detail': 'Outlet not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Validate order
+        try:
+            order = Order.objects.get(order_number=order_number, outlet=outlet)
+        except Order.DoesNotExist:
+            return Response({'error': True, 'detail': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Extract new discount percentage from request body
+        data = request.data
+        new_discount_percentage = Decimal(data.get('discount_percentage', 0.0)).quantize(Decimal('0.00'))
+
+        # Recalculate totals
+        total_amount = sum(item.total for item in order.order_items.all())
+        total_after_discount = total_amount - (total_amount * (new_discount_percentage / Decimal('100')))
+
+        # Determine GST type
+        customer_state = order.customer.state.lower() if order.customer and order.customer.state else ""
+        is_uttar_pradesh = (customer_state == "uttar pradesh")
+
+        if is_uttar_pradesh:
+            cgst = total_after_discount * (Decimal('9') / Decimal('100'))
+            sgst = total_after_discount * (Decimal('9') / Decimal('100'))
+            igst = Decimal('0.00')
+        else:
+            cgst = Decimal('0.00')
+            sgst = Decimal('0.00')
+            igst = total_after_discount * (Decimal('18') / Decimal('100'))
+
+        # Final total with GST
+        total_gst = (cgst + sgst + igst).quantize(Decimal('0.00'))
+        total_after_gst = (total_after_discount + total_gst).quantize(Decimal('0.00'))
+
+        # Update order fields
+        order.discount_percentage = new_discount_percentage
+        order.total_after_discount = total_after_discount.quantize(Decimal('0.00'))
+        order.total_gst = total_gst
+        order.total_cgst = cgst.quantize(Decimal('0.00'))
+        order.total_sgst = sgst.quantize(Decimal('0.00'))
+        order.total_igst = igst.quantize(Decimal('0.00'))
+        order.total_after_gst = total_after_gst
+        order.save()
+
+        return Response({'error': False, 'detail': 'Order updated successfully', 'order_number': order.order_number})
+
+    except Exception as e:
+        return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
 
 
 

@@ -27,4 +27,6 @@ urlpatterns = [
     path('<int:outlet_id>/get-orders/', views.get_orders_by_outlet, name='get_orders_by_outlet'),
     
     path('generate-bill/<str:order_number>/', views.generate_bill, name='generate_bill'),
+    
+    path('edit-bill/<int:outlet_id>/<str:order_number>/<int:user_id>/', views.update_order_discount, name='update_order_discount'),
 ]

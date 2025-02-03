@@ -321,7 +321,7 @@ def print_bill(order_number):
         grand_amount = rounded_total  # Grand total is the rounded value
 
         # Convert grand total into words
-        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace("zero paise", "").title()
+        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace("zero paise", "").replace("-", " ").replace(",", "").title()
 
         # UPI payment details
         upi_id = "vyapar.171035825947@hdfcbank"

@@ -115,6 +115,8 @@ class OrderSerializer(serializers.ModelSerializer):
             'total_igst',
             'mode_of_payment',
             'order_items',
+            'total_after_discount',
+            'total_after_gst',
         ]
 
 

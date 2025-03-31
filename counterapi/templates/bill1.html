@@ -188,7 +188,24 @@
                 <td>Net Amount:</td>
                 <td>₹ {{ net_amount }}</td>
             </tr>
-            
+            <tr>
+                {% if sgst %}
+                <td>SGST @9%:</td>
+                <td>₹ {{ sgst }}</td>
+                {% endif %}
+            </tr>
+            <tr>
+                {% if cgst %}
+                <td>CGST @9%:</td>
+                <td>₹ {{ cgst }}</td>
+                {% endif %}
+            </tr>
+            <tr>
+                {% if igst %}
+                <td>IGST @18%:</td>
+                <td>₹ {{ igst }}</td>
+                {% endif %}
+            </tr>
             
             <tr>
                 <td>Round Off:</td>
@@ -199,9 +216,7 @@
                 <td><strong>₹ {{ grand_amount }}</strong></td>
             </tr>
         </table>
-        
-        <p><strong>Total Amount: </strong> ₹ {{ grand_amount }}  <strong> {% if cgst %} CGST @9%:</strong> ₹{{ cgst }}, <strong>SGST @9%:</strong> ₹{{ sgst }} <strong>{% elif igst %} IGST @18%: </strong>₹{{ igst }} {% endif %}</p>
-        
+
         <strong><p>Total (in words): {{ total_in_words }}</p></strong>
 
         <!-- Footer Section -->
@@ -213,7 +228,6 @@
             </div>  
             <p>Terms & Conditions:</p>
             <ol>
-                <li>All prices quoted are inclusive of Goods and Services Tax (GST).</li>
                 <li>For any loss or damage, compensation amount shall not exceed 10x service charge or garment cost, whichever is lower.</li>
                 <li>For detailed T&C, visit <a href="https://www.laundrytalks.in" target="_blank">www.laundrytalks.in</a></li>
                 <li>Express Service Charges are 100% extra.</li>

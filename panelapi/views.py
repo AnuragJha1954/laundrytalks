@@ -877,7 +877,7 @@ def generate_bill(request, order_number):
         igst = Decimal(order.total_igst or 0)
 
         # Calculate round-off and grand total
-        calculated_total = net_amount + sgst + cgst + igst
+        calculated_total = net_amount
         rounded_total = calculated_total.quantize(Decimal('1'), rounding="ROUND_HALF_UP")
         round_off = rounded_total - calculated_total
         grand_amount = rounded_total
@@ -955,7 +955,7 @@ def generate_bill(request, order_number):
 
 
 @swagger_auto_schema(
-    method='get',
+    method='put',
     operation_description="Update the discount percentage for an order, recalculate totals, and apply GST.",
     manual_parameters=[
         openapi.Parameter(

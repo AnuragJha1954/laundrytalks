@@ -1096,5 +1096,174 @@ def update_order_discount(request, outlet_id, order_number,user_id):
 
 
 
+@swagger_auto_schema(
+    method='get',
+    manual_parameters=[
+        openapi.Parameter(
+            'invoice_number',
+            openapi.IN_PATH,
+            description="Invoice number of the order",
+            type=openapi.TYPE_STRING,
+            required=True
+        )
+    ],
+    operation_summary="Get Order Details by Invoice Number",
+    responses={
+        200: openapi.Response(
+            description="Order details retrieved successfully"
+        ),
+        404: openapi.Response(
+            description="Order not found"
+        ),
+        500: openapi.Response(
+            description="Internal server error"
+        ),
+    }
+)
+@api_view(['GET'])
+def get_order_details_by_invoice(request, invoice_number):
+    try:
+        order = get_object_or_404(Order, invoice_number=invoice_number)
+        order_items = OrderItem.objects.filter(order=order)
+
+        item_list = [
+            {
+                "item_name": item.product.name if item.product else "N/A",
+                "quantity": item.quantity,
+                "total_price": float(item.total_price),
+            }
+            for item in order_items
+        ]
+
+        return Response({
+            "error": False,
+            "order_details": {
+                "pickup_date_time": order.date_of_collection,
+                "store": order.outlet.name,
+                "status": "Completed",  # Static or use order.status if exists
+                "items": item_list,
+                "total_items": sum(item["quantity"] for item in item_list),
+                "discount": float(order.discount_percentage),
+                "promo_coupon": "",
+                "discount_promo_coupon_amount": "",
+                "credit_amount": "",
+                "notes": "",
+                "tip": "",
+                "tax_amount": float(order.total_gst),
+                "total_amount": float(order.total_amount),
+                "due_date_time": "",
+                "payment_type": order.mode_of_payment,
+                "due_unpaid_pending_amount": "",
+                "adjustment_amount": "",
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "error": True,
+            "detail": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_summary="Cancel Order",
+    manual_parameters=[
+        openapi.Parameter(
+            'invoice_number',
+            openapi.IN_PATH,
+            description="Invoice number of the order to cancel",
+            type=openapi.TYPE_STRING,
+            required=True
+        )
+    ],
+    responses={
+        200: openapi.Response(description="Order cancelled successfully"),
+        404: openapi.Response(description="Order not found"),
+    }
+)
+@api_view(['POST'])
+def cancel_order(request, invoice_number):
+    try:
+        # Order cancellation logic here (stubbed for now)
+        return Response({
+            "error": False,
+            "message": f"Order with invoice {invoice_number} has been cancelled successfully."
+        }, status=status.HTTP_200_OK)
+    except Exception:
+        return Response({
+            "error": True,
+            "message": "Something went wrong while cancelling the order."
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@swagger_auto_schema(
+    method='post',
+    operation_summary="Add Refund for Order",
+    manual_parameters=[
+        openapi.Parameter('invoice_number', openapi.IN_PATH, description="Invoice number", type=openapi.TYPE_STRING)
+    ],
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['payment_mode', 'amount', 'reason'],
+        properties={
+            'payment_mode': openapi.Schema(type=openapi.TYPE_STRING, description='Refund payment mode'),
+            'amount': openapi.Schema(type=openapi.TYPE_NUMBER, format='float', description='Refund amount'),
+            'reason': openapi.Schema(type=openapi.TYPE_STRING, description='Reason for refund'),
+        }
+    ),
+    responses={
+        200: openapi.Response(description="Refund processed successfully"),
+        400: openapi.Response(description="Invalid input or refund failed"),
+    }
+)
+@api_view(['POST'])
+def add_refund(request, invoice_number):
+    try:
+        payment_mode = request.data.get("payment_mode")
+        amount = request.data.get("amount")
+        reason = request.data.get("reason")
+
+        # Input validation (optional)
+        if not payment_mode or not amount or not reason:
+            return Response({
+                "error": True,
+                "message": "Missing required fields."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Stub response for now
+        return Response({
+            "error": False,
+            "message": f"Refund of ₹{amount} initiated via {payment_mode}. Reason: {reason}"
+        }, status=status.HTTP_200_OK)
+    except Exception:
+        return Response({
+            "error": True,
+            "message": "Something went wrong while processing the refund."
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

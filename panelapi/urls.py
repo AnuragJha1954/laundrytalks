@@ -26,7 +26,13 @@ urlpatterns = [
     # Method to get orders for an outlet
     path('<int:outlet_id>/get-orders/', views.get_orders_by_outlet, name='get_orders_by_outlet'),
     
+    path('orders/invoice/<str:invoice_number>/', views.get_order_details_by_invoice, name='get-order-by-invoice'),
+    
     path('generate-bill/<str:order_number>/', views.generate_bill, name='generate_bill'),
+    
+    path('orders/invoice/<str:invoice_number>/cancel/', views.cancel_order, name='cancel-order'),
+    
+    path('orders/invoice/<str:invoice_number>/refund/', views.add_refund, name='add-refund'),
     
     path('edit-bill/<int:outlet_id>/<str:order_number>/<int:user_id>/', views.update_order_discount, name='update_order_discount'),
 ]

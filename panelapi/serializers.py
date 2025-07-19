@@ -124,3 +124,18 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 
+
+
+
+class CustomerUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customer
+        fields = ['name', 'phone_number', 'state', 'gst_number', 'address', 'reference']
+
+
+
+
+
+
+
+

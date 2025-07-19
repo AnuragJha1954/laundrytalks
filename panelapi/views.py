@@ -46,7 +46,8 @@ from .serializers import (
     OutletCredsSerializer,
     OrderSerializer,
     OrderItemSerializer,
-    CustomerSerializer
+    CustomerSerializer,
+    CustomerUpdateSerializer
 )
 from users.models import CustomUser
 
@@ -591,21 +592,28 @@ def get_outlet_creds(request, outlet_id):
 @permission_classes([AllowAny])
 def get_products_for_outlet(request, outlet_id):
     try:
-        # Retrieve the outlet object based on the outlet_id from the URL
         outlet = Outlet.objects.get(id=outlet_id)
         
-        # Retrieve products associated with the outlet
+        # Fetch products linked to this outlet
         products = Product.objects.filter(outlets=outlet)
 
+        # Optional search query
+        search_query = request.query_params.get('search')
+        if search_query:
+            products = products.filter(item_name__icontains=search_query)
+            
+        # Optional filter by category name
+        category_query = request.query_params.get('category')
+        if category_query:
+            products = products.filter(category__name__icontains=category_query)
+
         if products.exists():
-            # If products are found, serialize them and return
             serializer = ProductSerializer(products, many=True)
             return Response(
                 {"error": False, "products": serializer.data},
                 status=status.HTTP_200_OK
             )
         else:
-            # If no products are found for the outlet, return a 404 response
             return Response(
                 {"error": True, "detail": "No products found for this outlet"},
                 status=status.HTTP_404_NOT_FOUND
@@ -628,9 +636,51 @@ def get_products_for_outlet(request, outlet_id):
 
 
 
+@swagger_auto_schema(
+    method='patch',
+    request_body=ProductSerializer,
+    operation_summary="Edit product details",
+    responses={200: ProductSerializer()}
+)
+@api_view(['PATCH'])
+@permission_classes([AllowAny])
+def edit_product(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ProductSerializer(product, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"success": True, "product": serializer.data}, status=status.HTTP_200_OK)
+    return Response({"error": True, "detail": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
+
+
+
+
+
+@swagger_auto_schema(
+    method='delete',
+    operation_summary="Delete a product by ID",
+    responses={
+        200: openapi.Response(description="Product deleted successfully"),
+        404: openapi.Response(description="Product not found")
+    }
+)
+@api_view(['DELETE'])
+def delete_product(request, product_id):
+    try:
+        product = Product.objects.get(id=product_id)
+        product.delete()
+        return Response({"success": True, "message": "Product deleted successfully."}, status=status.HTTP_200_OK)
+    except Product.DoesNotExist:
+        return Response({"error": True, "message": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": True, "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -1267,3 +1317,129 @@ def add_refund(request, invoice_number):
             "error": True,
             "message": "Something went wrong while processing the refund."
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
+
+
+
+
+
+
+@swagger_auto_schema(
+    method='get',
+    operation_summary="Get all customers by outlet (with filters and search)",
+    manual_parameters=[
+        openapi.Parameter('outlet_id', openapi.IN_PATH, description="ID of the outlet", type=openapi.TYPE_INTEGER, required=True),
+        openapi.Parameter('status', openapi.IN_QUERY, description="Filter by status", type=openapi.TYPE_STRING),
+        openapi.Parameter('type', openapi.IN_QUERY, description="Filter by customer type", type=openapi.TYPE_STRING),
+        openapi.Parameter('search', openapi.IN_QUERY, description="Search by name or phone", type=openapi.TYPE_STRING),
+    ],
+    responses={200: openapi.Response(description="List of customers")}
+)
+@api_view(['GET'])
+def get_customers_by_outlet(request, outlet_id):
+    try:
+        # Get query params
+        status_filter = request.query_params.get('status')
+        type_filter = request.query_params.get('type')
+        search_query = request.query_params.get('search')
+
+        # Filter by outlet
+        customers = Customer.objects.filter(outlet_id=outlet_id)
+
+        # Apply search filter
+        if search_query:
+            customers = customers.filter(
+                Q(name__icontains=search_query) | Q(phone_number__icontains=search_query)
+            )
+
+        # # Apply type and status filters (hardcoded dummy example, since model doesn't have these fields yet)
+        # if type_filter:
+        #     customers = customers.filter(reference__icontains=type_filter)  # replace with actual type field later
+
+        # if status_filter:
+        #     customers = customers.filter(address__icontains=status_filter)  # replace with actual status field later
+
+        data = []
+        for customer in customers:
+            customer_data = {
+                "name": customer.name,
+                "phone_number": customer.phone_number,
+                "email": "",
+                "commercial": {
+                    "business_name": "",
+                    "billing_group": "",
+                    "payment_terms": "On Delivery",
+                    "order_notification": True
+                },
+                "address": customer.address or "",
+                "city": "",
+                "state": customer.state,
+                "pin_code": "",
+                "country": "India",
+                "location": "",
+                "customer_id": f"CUST-{str(customer.id).zfill(6)}",
+                "gstin": customer.gst_number or "",
+                "tax_number": "",
+                "tax_exempt": False,
+                "discount": "0%",
+                "promo_or_coupon": "",
+                "store": customer.outlet.name if hasattr(customer.outlet, 'name') else "",
+                "price_list": "Default",
+                "subscription_package": "",
+                "loyalty_referral_credits": 0,
+                "preferences": {}
+            }
+            data.append(customer_data)
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    except Outlet.DoesNotExist:
+        return Response({"error": "Outlet not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+
+
+
+
+
+
+
+@swagger_auto_schema(
+    method='patch',
+    request_body=CustomerUpdateSerializer,
+    operation_summary="Edit customer details (only model fields)",
+    responses={200: CustomerUpdateSerializer()}
+)
+@api_view(['PATCH'])
+def edit_customer(request, customer_id):
+    try:
+        customer = Customer.objects.get(id=customer_id)
+    except Customer.DoesNotExist:
+        return Response({"error": "Customer not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = CustomerUpdateSerializer(customer, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

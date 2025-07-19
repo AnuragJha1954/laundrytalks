@@ -23,6 +23,10 @@ urlpatterns = [
     # Method to get products for an outlet
     path('get_products_for_outlet/<int:outlet_id>/', views.get_products_for_outlet, name='get_products_for_outlet'),
     
+    path('products/<int:product_id>/edit/', views.edit_product, name='edit_product'),
+    
+    path('products/<int:product_id>/delete/', views.delete_product, name='delete_product'),
+    
     # Method to get orders for an outlet
     path('<int:outlet_id>/get-orders/', views.get_orders_by_outlet, name='get_orders_by_outlet'),
     
@@ -35,4 +39,9 @@ urlpatterns = [
     path('orders/invoice/<str:invoice_number>/refund/', views.add_refund, name='add-refund'),
     
     path('edit-bill/<int:outlet_id>/<str:order_number>/<int:user_id>/', views.update_order_discount, name='update_order_discount'),
+    
+    path('<int:outlet_id>/customers/', views.get_customers_by_outlet, name='get_customers_by_outlet'),
+    
+    path('customers/<int:customer_id>/edit/', views.edit_customer, name='edit_customer'),
+    
 ]

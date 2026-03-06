@@ -7,6 +7,18 @@ from .views import (
     place_order,
     get_orders_by_outlet,
     add_product,
+    brand_list_create,
+    pattern_list_create,
+    stain_type_list_create,
+    defect_type_list_create,
+    material_type_list_create,
+    starch_type_list_create,
+    detergent_type_list_create,
+    detergent_scent_type_list_create,
+    wash_temperature_type_list_create,
+    fabric_softener_type_list_create,
+    colour_list_create,
+    topup_service_list_create,
     # invoice_view
 )
 
@@ -30,4 +42,18 @@ urlpatterns = [
     
     
     # path('test/', invoice_view, name='invoice'),
+    
+    # Specifiacations models endpoints
+    path("brands/", brand_list_create, name="brand-list-create"),
+    path("patterns/", pattern_list_create, name="pattern-list-create"),
+    path("stain-types/", stain_type_list_create, name="stain-type-list-create"),
+    path("defect-types/", defect_type_list_create, name="defect-type-list-create"),
+    path("material-types/", material_type_list_create, name="material-type-list-create"),
+    path("starch-types/", starch_type_list_create, name="starch-type-list-create"),
+    path("detergent-types/", detergent_type_list_create, name="detergent-type-list-create"),
+    path("detergent-scent-types/", detergent_scent_type_list_create, name="detergent-scent-type-list-create"),
+    path("wash-temperature-types/", wash_temperature_type_list_create, name="wash-temperature-type-list-create"),
+    path("fabric-softener-types/", fabric_softener_type_list_create, name="fabric-softener-type-list-create"),
+    path("colours/", colour_list_create, name="colour-list-create"),
+    path("topup-services/", topup_service_list_create, name="topup-service-list-create"),
 ]

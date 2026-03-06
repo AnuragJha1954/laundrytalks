@@ -14,6 +14,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render
 from django.utils.timezone import now
+from django.template.loader import render_to_string
 
 
 from drf_yasg.utils import swagger_auto_schema
@@ -36,14 +37,39 @@ from panelapi.models import (
     Category,
     Customer,
     Order,
-    OrderItem
+    OrderItem,
+    Brand,
+    Pattern,
+    StainType,
+    DefectType,
+    MaterialType,
+    StarchType,
+    DetergentType,
+    DetergentScentType,
+    WashTemperatureType,
+    FabricSoftenerType,
+    Colour,
+    TopUpService,
+    OrderItemSpecification,
 )
 
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
     CustomerSerializer,
-    OrderSerializer
+    OrderSerializer,
+    BrandSerializer,
+    PatternSerializer,
+    StainTypeSerializer,
+    DefectTypeSerializer,
+    MaterialTypeSerializer,
+    StarchTypeSerializer,
+    DetergentTypeSerializer,
+    DetergentScentTypeSerializer,
+    WashTemperatureTypeSerializer,
+    FabricSoftenerTypeSerializer,
+    ColourSerializer,
+    TopUpServiceSerializer,
 )
 
 
@@ -291,93 +317,93 @@ def add_customer(request, outlet_id):
 
 
 
-def print_bill(order_number):
-    try:
-        # Fetch the order details
-        order = Order.objects.select_related('customer', 'outlet').get(order_number=order_number)
-        order_items = OrderItem.objects.filter(order=order).select_related('product')
+# def print_bill(order_number):
+#     try:
+#         # Fetch the order details
+#         order = Order.objects.select_related('customer', 'outlet').get(order_number=order_number)
+#         order_items = OrderItem.objects.filter(order=order).select_related('product')
 
-        if not order_items.exists():
-            return Response({'error': True, 'detail': 'No items found in the order'}, status=status.HTTP_404_NOT_FOUND)
+#         if not order_items.exists():
+#             return Response({'error': True, 'detail': 'No items found in the order'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Calculate order totals
-        total_quantity = sum(item.quantity for item in order_items)
-        total_discount = Decimal(order.total_amount) * (Decimal(order.discount_percentage) / Decimal(100)) if order.discount_percentage > 0 else Decimal(0)
-        net_amount = Decimal(order.total_amount) - total_discount  # Net amount already includes GST
+#         # Calculate order totals
+#         total_quantity = sum(item.quantity for item in order_items)
+#         total_discount = Decimal(order.total_amount) * (Decimal(order.discount_percentage) / Decimal(100)) if order.discount_percentage > 0 else Decimal(0)
+#         net_amount = Decimal(order.total_amount) - total_discount  # Net amount already includes GST
 
-        sgst = Decimal(order.total_sgst)
-        cgst = Decimal(order.total_cgst)
-        igst = Decimal(order.total_igst)
+#         sgst = Decimal(order.total_sgst)
+#         cgst = Decimal(order.total_cgst)
+#         igst = Decimal(order.total_igst)
 
-        # Calculate round-off and grand amount
-        calculated_total = net_amount  # Since GST is already included, total remains the same
-        rounded_total = calculated_total.quantize(Decimal('1'), rounding="ROUND_HALF_UP")  # Round to the nearest integer
-        round_off = rounded_total - calculated_total  # Difference between rounded total and actual total
-        grand_amount = rounded_total  # Grand total is the rounded value
+#         # Calculate round-off and grand amount
+#         calculated_total = net_amount  # Since GST is already included, total remains the same
+#         rounded_total = calculated_total.quantize(Decimal('1'), rounding="ROUND_HALF_UP")  # Round to the nearest integer
+#         round_off = rounded_total - calculated_total  # Difference between rounded total and actual total
+#         grand_amount = rounded_total  # Grand total is the rounded value
 
-        # Convert grand total into words
-        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace("zero paise", "").replace("-", " ").replace(",", "").title()
+#         # Convert grand total into words
+#         total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace("zero paise", "").replace("-", " ").replace(",", "").title()
 
-        # UPI payment details
-        upi_id = "vyapar.171035825947@hdfcbank"
-        name = "Laundry Talks"
+#         # UPI payment details
+#         upi_id = "vyapar.171035825947@hdfcbank"
+#         name = "Laundry Talks"
 
-        # Generate UPI URL and QR Code
-        upi_url = f"upi://pay?pa={upi_id}&pn={name}"
-        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
-        qr.add_data(upi_url)
-        qr.make(fit=True)
-        qr_img = qr.make_image(fill_color="black", back_color="white")
+#         # Generate UPI URL and QR Code
+#         upi_url = f"upi://pay?pa={upi_id}&pn={name}"
+#         qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+#         qr.add_data(upi_url)
+#         qr.make(fit=True)
+#         qr_img = qr.make_image(fill_color="black", back_color="white")
 
-        # Save QR code image to BytesIO buffer
-        qr_buffer = BytesIO()
-        qr_img.save(qr_buffer)
-        qr_buffer.seek(0)
+#         # Save QR code image to BytesIO buffer
+#         qr_buffer = BytesIO()
+#         qr_img.save(qr_buffer)
+#         qr_buffer.seek(0)
 
-        # Convert QR code image to base64
-        qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
+#         # Convert QR code image to base64
+#         qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
 
-        # Build context for the template
-        context = {
-            "customer_name": order.customer.name if order.customer else "Walk-in Customer",
-            "billing_date": order.date_of_billing.strftime('%Y-%m-%d'),
-            "customer_address": order.customer.address if order.customer else "Not Provided",
-            "invoice_number": order.invoice_number,
-            "customer_phone": order.customer.phone_number if order.customer else "Not Provided",
-            "reference": order.customer.reference if order.customer and hasattr(order.customer, "reference") else "N/A",
-            "gst_number": order.customer.gst_number if order.customer else "Not Provided",
-            "collection_date": order.date_of_collection.strftime('%Y-%m-%d') if order.date_of_collection else "Not Provided",
-            "items": [
-                {
-                    "description": item.product.item_name,
-                    "hanger": item.hanger,  # Include the hanger value
-                    "hsn_code": item.product.hsn_sac_code if hasattr(item.product, "hsn_sac_code") else " ",
-                    "quantity": item.quantity,
-                    "rate": round(item.product.rate_per_unit,2 ),  # Extract GST from rate
-                    "total": round(item.total , 2),  # Extract GST from total
-                } for item in order_items
-            ],
-            "total_quantity": total_quantity,
-            "total_amount": "{:.2f}".format(order.total_amount),
-            "discount_percentage": "{:.2f}".format(order.discount_percentage) if order.discount_percentage > 0 else "0.00",
-            "discount": "{:.2f}".format(total_discount),
-            "net_amount": "{:.2f}".format(net_amount),  # Now it's the base price before GST
-            "sgst": "{:.2f}".format(sgst) if sgst > 0 else None,
-            "cgst": "{:.2f}".format(cgst) if cgst > 0 else None,
-            "igst": "{:.2f}".format(igst) if igst > 0 else None,
-            "round_off": "{:.2f}".format(round_off),
-            "grand_amount": "{:.2f}".format(grand_amount),
-            "total_in_words": total_in_words + " Only.",
-            "qr_code": qr_base64
-        }
+#         # Build context for the template
+#         context = {
+#             "customer_name": order.customer.name if order.customer else "Walk-in Customer",
+#             "billing_date": order.date_of_billing.strftime('%Y-%m-%d'),
+#             "customer_address": order.customer.address if order.customer else "Not Provided",
+#             "invoice_number": order.invoice_number,
+#             "customer_phone": order.customer.phone_number if order.customer else "Not Provided",
+#             "reference": order.customer.reference if order.customer and hasattr(order.customer, "reference") else "N/A",
+#             "gst_number": order.customer.gst_number if order.customer else "Not Provided",
+#             "collection_date": order.date_of_collection.strftime('%Y-%m-%d') if order.date_of_collection else "Not Provided",
+#             "items": [
+#                 {
+#                     "description": item.product.item_name,
+#                     "hanger": item.hanger,  # Include the hanger value
+#                     "hsn_code": item.product.hsn_sac_code if hasattr(item.product, "hsn_sac_code") else " ",
+#                     "quantity": item.quantity,
+#                     "rate": round(item.product.rate_per_unit,2 ),  # Extract GST from rate
+#                     "total": round(item.total , 2),  # Extract GST from total
+#                 } for item in order_items
+#             ],
+#             "total_quantity": total_quantity,
+#             "total_amount": "{:.2f}".format(order.total_amount),
+#             "discount_percentage": "{:.2f}".format(order.discount_percentage) if order.discount_percentage > 0 else "0.00",
+#             "discount": "{:.2f}".format(total_discount),
+#             "net_amount": "{:.2f}".format(net_amount),  # Now it's the base price before GST
+#             "sgst": "{:.2f}".format(sgst) if sgst > 0 else None,
+#             "cgst": "{:.2f}".format(cgst) if cgst > 0 else None,
+#             "igst": "{:.2f}".format(igst) if igst > 0 else None,
+#             "round_off": "{:.2f}".format(round_off),
+#             "grand_amount": "{:.2f}".format(grand_amount),
+#             "total_in_words": total_in_words + " Only.",
+#             "qr_code": qr_base64
+#         }
 
-        # Render the template
-        return render(None, "bill.html", context)
+#         # Render the template
+#         return render(None, "bill.html", context)
 
-    except Order.DoesNotExist:
-        return Response({'error': True, 'detail': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#     except Order.DoesNotExist:
+#         return Response({'error': True, 'detail': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+#     except Exception as e:
+#         return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # def print_bill(order_number):
@@ -493,54 +519,177 @@ def print_bill(order_number):
 # }
 
 
+#updated sample body with specifications
+
+# {
+#   "customer_phone": "9900112233",
+#   "mode_of_payment": "CARD",
+#   "discount_percentage": 0,
+#   "date_of_collection": "2025-12-12",
+#   "order_items": [
+#     {
+#       "product_id": 2,
+#       "quantity": 4,
+#       "hanger": true,
+#       "specification": {
+#         "brand": "H&M",
+#         "pattern": "Striped",
+#         "material_type": "Cotton",
+#         "starch_type": "Light",
+#         "top_up_service": "Steam Press",
+#         "fold": false
+#       }
+#     },
+#     {
+#       "product_id": 7,
+#       "quantity": 1,
+#       "hanger": false,
+#       "specification": {
+#         "brand": "Louis Philippe",
+#         "pattern": "Plain",
+#         "colour": "Black",
+#         "wash_temperature_type": "Cold",
+#         "fabric_softener_type": "Premium",
+#         "box": true,
+#         "fold": true
+#       }
+#     }
+#   ]
+# }
+
+
+def print_bill(order_number):
+    try:
+        # Fetch the order details
+        order = Order.objects.select_related('customer', 'outlet').get(order_number=order_number)
+        order_items = OrderItem.objects.filter(order=order).select_related('product')
+
+        if not order_items.exists():
+            return Response({'error': True, 'detail': 'No items found in the order'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Calculate order totals
+        total_quantity = sum(item.quantity for item in order_items)
+        total_discount = Decimal(order.total_amount) * (Decimal(order.discount_percentage) / Decimal(100)) if order.discount_percentage > 0 else Decimal(0)
+        net_amount = Decimal(order.total_amount) - total_discount  # Net amount already includes GST
+
+        sgst = Decimal(order.total_sgst)
+        cgst = Decimal(order.total_cgst)
+        igst = Decimal(order.total_igst)
+
+        # Calculate round-off and grand amount
+        calculated_total = net_amount  # Since GST is already included, total remains the same
+        rounded_total = calculated_total.quantize(Decimal('1'), rounding="ROUND_HALF_UP")  # Round to the nearest integer
+        round_off = rounded_total - calculated_total  # Difference between rounded total and actual total
+        grand_amount = rounded_total  # Grand total is the rounded value
+
+        # Convert grand total into words
+        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace("zero paise", "").replace("-", " ").replace(",", "").title()
+
+        # UPI payment details
+        upi_id = "vyapar.171035825947@hdfcbank"
+        name = "Laundry Talks"
+
+        # Generate UPI URL and QR Code
+        upi_url = f"upi://pay?pa={upi_id}&pn={name}"
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+        qr.add_data(upi_url)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+
+        # Save QR code image to BytesIO buffer
+        qr_buffer = BytesIO()
+        qr_img.save(qr_buffer)
+        qr_buffer.seek(0)
+
+        # Convert QR code image to base64
+        qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
+
+        # Build context for the template
+        context = {
+            "customer_name": order.customer.name if order.customer else "Walk-in Customer",
+            "billing_date": order.date_of_billing.strftime('%Y-%m-%d'),
+            "customer_address": order.customer.address if order.customer else "Not Provided",
+            "invoice_number": order.invoice_number,
+            "customer_phone": order.customer.phone_number if order.customer else "Not Provided",
+            "reference": order.customer.reference if order.customer and hasattr(order.customer, "reference") else "N/A",
+            "gst_number": order.customer.gst_number if order.customer else "Not Provided",
+            "collection_date": order.date_of_collection.strftime('%Y-%m-%d') if order.date_of_collection else "Not Provided",
+            "items": [
+                {
+                    "description": item.product.item_name,
+                    "hanger": item.hanger,  # Include the hanger value
+                    "hsn_code": item.product.hsn_sac_code if hasattr(item.product, "hsn_sac_code") else " ",
+                    "quantity": item.quantity,
+                    "rate": round(item.product.rate_per_unit,2 ),  # Extract GST from rate
+                    "total": round(item.total , 2),  # Extract GST from total
+                } for item in order_items
+            ],
+            "total_quantity": total_quantity,
+            "total_amount": "{:.2f}".format(order.total_amount),
+            "discount_percentage": "{:.2f}".format(order.discount_percentage) if order.discount_percentage > 0 else "0.00",
+            "discount": "{:.2f}".format(total_discount),
+            "net_amount": "{:.2f}".format(net_amount),  # Now it's the base price before GST
+            "sgst": "{:.2f}".format(sgst) if sgst > 0 else None,
+            "cgst": "{:.2f}".format(cgst) if cgst > 0 else None,
+            "igst": "{:.2f}".format(igst) if igst > 0 else None,
+            "round_off": "{:.2f}".format(round_off),
+            "grand_amount": "{:.2f}".format(grand_amount),
+            "total_in_words": total_in_words + " Only.",
+            "qr_code": qr_base64
+        }
+
+        # Render the template
+        html = render_to_string("bill.html", context)
+
+        return {
+            "html": html,
+            "context": context
+        }
+
+    except Order.DoesNotExist:
+        return Response({'error': True, 'detail': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
+
 @swagger_auto_schema(
     method='post',
     operation_summary="Place an Order",
-    operation_description="This endpoint places an order for a specific outlet. It creates the order, links it to the customer, calculates totals, and adds items to the order.",
+    operation_description=(
+        "Places an order for a specific outlet. It creates the order, links it to the customer "
+        "by phone, calculates totals & GST, and adds items to the order with optional specifications. "
+        "Specification fields use names (e.g., 'Cotton', 'Blue', 'Express Delivery') instead of IDs."
+    ),
     request_body=openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
             "customer_phone": openapi.Schema(
                 type=openapi.TYPE_STRING,
-                description="Phone number of the customer."
+                description="Phone number of the customer. Used to find or create a customer."
             ),
             "date_of_collection": openapi.Schema(
                 type=openapi.TYPE_STRING,
                 format=openapi.FORMAT_DATE,
-                description="Date when the order is expected to be collected."
+                description="Expected collection date in ISO format (YYYY-MM-DD)."
             ),
             "discount_percentage": openapi.Schema(
                 type=openapi.TYPE_NUMBER,
                 format=openapi.FORMAT_FLOAT,
-                description="Discount percentage applied to the total amount."
-            ),
-            "total_gst": openapi.Schema(
-                type=openapi.TYPE_NUMBER,
-                format=openapi.FORMAT_FLOAT,
-                description="Total GST amount for the order."
-            ),
-            "total_cgst": openapi.Schema(
-                type=openapi.TYPE_NUMBER,
-                format=openapi.FORMAT_FLOAT,
-                description="Central GST portion of the total GST."
-            ),
-            "total_sgst": openapi.Schema(
-                type=openapi.TYPE_NUMBER,
-                format=openapi.FORMAT_FLOAT,
-                description="State GST portion of the total GST."
-            ),
-            "total_igst": openapi.Schema(
-                type=openapi.TYPE_NUMBER,
-                format=openapi.FORMAT_FLOAT,
-                description="Integrated GST portion of the total GST."
+                description="Discount percentage applied on the total amount."
             ),
             "mode_of_payment": openapi.Schema(
                 type=openapi.TYPE_STRING,
                 enum=["CASH", "CARD", "UPI", "ONLINE", "OTHER"],
-                description="Mode of payment for the order."
+                description="Mode of payment for the order.",
+                default="CASH"
             ),
             "order_items": openapi.Schema(
                 type=openapi.TYPE_ARRAY,
+                description="List of products and their quantities for the order, with optional specifications.",
                 items=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
@@ -549,13 +698,86 @@ def print_bill(order_number):
                             description="ID of the product."
                         ),
                         "quantity": openapi.Schema(
-                            type=openapi.TYPE_INTEGER,
+                            type=openapi.TYPE_NUMBER,
+                            format=openapi.FORMAT_FLOAT,
                             description="Quantity of the product ordered."
+                        ),
+                        "hanger": openapi.Schema(
+                            type=openapi.TYPE_BOOLEAN,
+                            description="Whether hanger is requested for this item.",
+                            default=False
+                        ),
+                        "specification": openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            description=(
+                                "Optional detailed specifications for this order item. "
+                                "All these fields are names (strings), not IDs. If a name doesn't exist, "
+                                "it will be created automatically."
+                            ),
+                            properties={
+                                "brand": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Brand name. Example: 'Raymond'."
+                                ),
+                                "pattern": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Pattern name. Example: 'Checked', 'Plain'."
+                                ),
+                                "stain_type": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Stain type name. Example: 'Oil', 'Ink'."
+                                ),
+                                "defect_type": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Defect type name. Example: 'Tear', 'Missing Button'."
+                                ),
+                                "material_type": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Material type. Example: 'Cotton', 'Silk'."
+                                ),
+                                "starch_type": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Starch type. Example: 'Light', 'Medium', 'Heavy'."
+                                ),
+                                "detergent_type": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Detergent type. Example: 'Regular', 'Premium'."
+                                ),
+                                "detergent_scent_type": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Detergent scent. Example: 'Lavender', 'Lemon'."
+                                ),
+                                "wash_temperature_type": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Wash temperature. Example: 'Cold', '40°C'."
+                                ),
+                                "fabric_softener_type": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Fabric softener type. Example: 'Premium', 'None'."
+                                ),
+                                "colour": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Colour name. Example: 'White', 'Blue'."
+                                ),
+                                "top_up_service": openapi.Schema(
+                                    type=openapi.TYPE_STRING,
+                                    description="Top-up service name. Example: 'Express Delivery', 'Steam Press'."
+                                ),
+                                "box": openapi.Schema(
+                                    type=openapi.TYPE_BOOLEAN,
+                                    description="Whether the item should be boxed.",
+                                    default=False
+                                ),
+                                "fold": openapi.Schema(
+                                    type=openapi.TYPE_BOOLEAN,
+                                    description="Whether the item should be folded.",
+                                    default=False
+                                ),
+                            }
                         ),
                     },
                     required=["product_id", "quantity"],
                 ),
-                description="List of products and their quantities for the order."
             ),
         },
         required=["customer_phone", "order_items"],
@@ -618,7 +840,10 @@ def place_order(request, outlet_id):
             try:
                 date_of_collection = datetime.fromisoformat(date_of_collection).strftime('%Y-%m-%d')
             except ValueError:
-                return Response({'error': True, 'detail': 'Invalid date format. Use ISO 8601 format.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'error': True, 'detail': 'Invalid date format. Use ISO 8601 format.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         # Validate customer
         customer = None
@@ -633,31 +858,35 @@ def place_order(request, outlet_id):
         # Generate invoice number in the format: outlet_idLTmmyysequential_number
         current_date = now()
         month_year = current_date.strftime('%m%y')
-        last_order = Order.objects.filter(outlet=outlet, invoice_number__startswith=f"{outlet_id}LT{month_year}").order_by('-id').first()
+        last_order = Order.objects.filter(
+            outlet=outlet,
+            invoice_number__startswith=f"{outlet_id}LT{month_year}"
+        ).order_by('-id').first()
 
         if last_order:
-            # Extract the sequential number from the end of the invoice number
             sequential_part = last_order.invoice_number[len(f"{outlet_id}LT{month_year}"):]
             if sequential_part.isdigit():
                 last_invoice_number = int(sequential_part)
             else:
-                return Response({'error': True, 'detail': 'Invalid format for last invoice number'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response(
+                    {'error': True, 'detail': 'Invalid format for last invoice number'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
             next_invoice_number = last_invoice_number + 1
         else:
             next_invoice_number = 1
 
-        # Construct the new invoice number
         invoice_number = f"{outlet_id}LT{month_year}{next_invoice_number}"
 
-        # Calculate totals and create order
-        total_amount = Decimal('0.00')  # Use Decimal for accurate monetary calculation
+        total_amount = Decimal('0.00')
+
         with transaction.atomic():
             order = Order.objects.create(
                 order_number=order_number,
                 outlet=outlet,
                 customer=customer,
                 date_of_collection=date_of_collection,
-                total_amount=total_amount,  # Placeholder, will be updated later
+                total_amount=total_amount,  # will update later
                 discount_percentage=discount_percentage,
                 mode_of_payment=mode_of_payment,
                 invoice_number=invoice_number,
@@ -667,15 +896,57 @@ def place_order(request, outlet_id):
             for item in items:
                 product_id = item.get('product_id')
                 quantity = Decimal(item.get('quantity', 1)).quantize(Decimal('0.00'))
-                hanger = item.get('hanger', False)  # Extract hanger value
+                hanger = item.get('hanger', False)
 
                 try:
                     product = Product.objects.get(id=product_id)
                 except Product.DoesNotExist:
-                    return Response({'error': True, 'detail': f'Product with ID {product_id} not found'}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {'error': True, 'detail': f'Product with ID {product_id} not found'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                # --- Specification from NAMES ---
+                spec_data = item.get('specification')
+                specification = None
+
+                if isinstance(spec_data, dict):
+
+                    def get_obj_id(model, key):
+                        value = spec_data.get(key)
+                        if value:
+                            obj, _ = model.objects.get_or_create(name=value)
+                            return obj.id
+                        return None
+
+                    specification = OrderItemSpecification.objects.create(
+                        brand_id=get_obj_id(Brand, "brand"),
+                        pattern_id=get_obj_id(Pattern, "pattern"),
+                        stain_type_id=get_obj_id(StainType, "stain_type"),
+                        defect_type_id=get_obj_id(DefectType, "defect_type"),
+                        material_type_id=get_obj_id(MaterialType, "material_type"),
+                        starch_type_id=get_obj_id(StarchType, "starch_type"),
+                        detergent_type_id=get_obj_id(DetergentType, "detergent_type"),
+                        detergent_scent_type_id=get_obj_id(DetergentScentType, "detergent_scent_type"),
+                        wash_temperature_type_id=get_obj_id(WashTemperatureType, "wash_temperature_type"),
+                        fabric_softener_type_id=get_obj_id(FabricSoftenerType, "fabric_softener_type"),
+                        colour_id=get_obj_id(Colour, "colour"),
+                        top_up_service_id=get_obj_id(TopUpService, "top_up_service"),
+                        box=spec_data.get('box', False),
+                        fold=spec_data.get('fold', False),
+                    )
 
                 total = (Decimal(product.rate_per_unit) * quantity).quantize(Decimal('0.00'))
-                OrderItem.objects.create(order=order, product=product, quantity=quantity, total=total, hanger=hanger)
+
+                OrderItem.objects.create(
+                    order=order,
+                    product=product,
+                    quantity=quantity,
+                    total=total,
+                    hanger=hanger,
+                    specification=specification,
+                )
+
                 total_amount += total
 
             # Calculate total after discount
@@ -685,40 +956,379 @@ def place_order(request, outlet_id):
             customer_state = customer.state.lower() if customer and customer.state else ""
             is_uttar_pradesh = (customer_state == "uttar pradesh")
 
-            
+            igst = Decimal('0.00')
+
             # Extract GST from the already included price
             if is_uttar_pradesh:
-
-                base_price = total_after_discount / Decimal('1.18')  # Removing 18% GST
+                base_price = total_after_discount / Decimal('1.18')
                 cgst = base_price * (Decimal('9') / Decimal('100'))
                 sgst = base_price * (Decimal('9') / Decimal('100'))
-
             else:
-
-                base_price = total_after_discount / Decimal('1.18')  # Removing 18% GST
+                base_price = total_after_discount / Decimal('1.18')
                 cgst = Decimal('0.00')
                 sgst = Decimal('0.00')
                 igst = base_price * (Decimal('18') / Decimal('100'))
 
-            # Final total remains the same (already inclusive of GST)
             total_gst = (cgst + sgst + igst).quantize(Decimal('0.00'))
-            total_after_gst = total_after_discount  # No additional GST is added
-            
-            # Update order fields
-            order.total_amount = total_amount.quantize(Decimal('0.00'))  # Total before discount
+            total_after_gst = total_after_discount
+
+            order.total_amount = total_amount.quantize(Decimal('0.00'))
             order.total_after_discount = total_after_discount.quantize(Decimal('0.00'))
             order.total_gst = total_gst
             order.total_cgst = cgst.quantize(Decimal('0.00'))
             order.total_sgst = sgst.quantize(Decimal('0.00'))
             order.total_igst = igst.quantize(Decimal('0.00'))
-            order.total_after_gst = total_after_gst  # Same as total_after_discount (since GST is included)
+            order.total_after_gst = total_after_gst
             order.save()
 
-        response = print_bill(order.order_number)  # Assuming print_bill is defined elsewhere
-        return response
+        # Assuming print_bill returns a DRF Response
+        bill_data = print_bill(order.order_number)
+
+        response_data = {
+            "order_details": {
+                "orderNo/InvoieNo": order.invoice_number,
+                "customer_phone": customer.phone_number if customer else None,
+                "order_items": [
+                    {
+                        "product_id": item.product.id,
+                        "quantity": item.quantity,
+                        "specifications": {
+                            "upcharges": "",
+                            "color": "",
+                            "brand": item.specification.brand.name if item.specification and item.specification.brand else "",
+                            "pattern": item.specification.pattern.name if item.specification and item.specification.pattern else "",
+                            "material": item.specification.material_type.name if item.specification and item.specification.material_type else "",
+                            "defects": item.specification.defect_type.name if item.specification and item.specification.defect_type else "",
+                            "stains": item.specification.stain_type.name if item.specification and item.specification.stain_type else "",
+                            "hanger": item.hanger,
+                            "box": item.specification.box if item.specification else False,
+                            "fold": item.specification.fold if item.specification else False,
+                            "starch": item.specification.starch_type.name if item.specification and item.specification.starch_type else "",
+                            "detergent": item.specification.detergent_type.name if item.specification and item.specification.detergent_type else "",
+                            "detergentScent": item.specification.detergent_scent_type.name if item.specification and item.specification.detergent_scent_type else "",
+                            "washTemperature": item.specification.wash_temperature_type.name if item.specification and item.specification.wash_temperature_type else "",
+                            "fabricSoftener": item.specification.fabric_softener_type.name if item.specification and item.specification.fabric_softener_type else ""
+                        }
+                    }
+                    for item in OrderItem.objects.filter(order=order).select_related("product", "specification")
+                ],
+                "date_of_collection": order.date_of_collection,
+                "discount_percentage": order.discount_percentage,
+                "mode_of_payment": order.mode_of_payment
+            },
+            "billHtml": bill_data["html"]
+        }
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     except Exception as e:
         return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
+
+
+
+# def place_order(request, outlet_id):
+#     try:
+#         # Validate outlet
+#         try:
+#             outlet = Outlet.objects.get(id=outlet_id)
+#         except Outlet.DoesNotExist:
+#             return Response({'error': True, 'detail': 'Outlet not found'}, status=status.HTTP_404_NOT_FOUND)
+
+#         # Extract body data
+#         data = request.data
+#         customer_phone = data.get('customer_phone')
+#         date_of_collection = data.get('date_of_collection')
+#         discount_percentage = Decimal(data.get('discount_percentage', 0.0)).quantize(Decimal('0.00'))
+#         mode_of_payment = data.get('mode_of_payment', 'CASH')
+#         items = data.get('order_items')
+
+#         if not items:
+#             return Response({'error': True, 'detail': 'Order items are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Parse and format date_of_collection
+#         if date_of_collection:
+#             try:
+#                 date_of_collection = datetime.fromisoformat(date_of_collection).strftime('%Y-%m-%d')
+#             except ValueError:
+#                 return Response(
+#                     {'error': True, 'detail': 'Invalid date format. Use ISO 8601 format.'},
+#                     status=status.HTTP_400_BAD_REQUEST
+#                 )
+
+#         # Validate customer
+#         customer = None
+#         if customer_phone:
+#             customer, created = Customer.objects.get_or_create(
+#                 phone_number=customer_phone, defaults={'name': 'Unknown'}
+#             )
+
+#         # Generate order number
+#         order_number = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
+
+#         # Generate invoice number in the format: outlet_idLTmmyysequential_number
+#         current_date = now()
+#         month_year = current_date.strftime('%m%y')
+#         last_order = Order.objects.filter(
+#             outlet=outlet,
+#             invoice_number__startswith=f"{outlet_id}LT{month_year}"
+#         ).order_by('-id').first()
+
+#         if last_order:
+#             sequential_part = last_order.invoice_number[len(f"{outlet_id}LT{month_year}"):]
+#             if sequential_part.isdigit():
+#                 last_invoice_number = int(sequential_part)
+#             else:
+#                 return Response(
+#                     {'error': True, 'detail': 'Invalid format for last invoice number'},
+#                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#                 )
+#             next_invoice_number = last_invoice_number + 1
+#         else:
+#             next_invoice_number = 1
+
+#         invoice_number = f"{outlet_id}LT{month_year}{next_invoice_number}"
+
+#         total_amount = Decimal('0.00')
+
+#         with transaction.atomic():
+#             order = Order.objects.create(
+#                 order_number=order_number,
+#                 outlet=outlet,
+#                 customer=customer,
+#                 date_of_collection=date_of_collection,
+#                 total_amount=total_amount,  # will update later
+#                 discount_percentage=discount_percentage,
+#                 mode_of_payment=mode_of_payment,
+#                 invoice_number=invoice_number,
+#             )
+
+#             # Add items to order and calculate total
+#             for item in items:
+#                 product_id = item.get('product_id')
+#                 quantity = Decimal(item.get('quantity', 1)).quantize(Decimal('0.00'))
+#                 hanger = item.get('hanger', False)
+
+#                 try:
+#                     product = Product.objects.get(id=product_id)
+#                 except Product.DoesNotExist:
+#                     return Response(
+#                         {'error': True, 'detail': f'Product with ID {product_id} not found'},
+#                         status=status.HTTP_400_BAD_REQUEST
+#                     )
+
+#                 # --- Specification from NAMES ---
+#                 spec_data = item.get('specification')
+#                 specification = None
+
+#                 if isinstance(spec_data, dict):
+
+#                     def get_obj_id(model, key):
+#                         value = spec_data.get(key)
+#                         if value:
+#                             obj, _ = model.objects.get_or_create(name=value)
+#                             return obj.id
+#                         return None
+
+#                     specification = OrderItemSpecification.objects.create(
+#                         brand_id=get_obj_id(Brand, "brand"),
+#                         pattern_id=get_obj_id(Pattern, "pattern"),
+#                         stain_type_id=get_obj_id(StainType, "stain_type"),
+#                         defect_type_id=get_obj_id(DefectType, "defect_type"),
+#                         material_type_id=get_obj_id(MaterialType, "material_type"),
+#                         starch_type_id=get_obj_id(StarchType, "starch_type"),
+#                         detergent_type_id=get_obj_id(DetergentType, "detergent_type"),
+#                         detergent_scent_type_id=get_obj_id(DetergentScentType, "detergent_scent_type"),
+#                         wash_temperature_type_id=get_obj_id(WashTemperatureType, "wash_temperature_type"),
+#                         fabric_softener_type_id=get_obj_id(FabricSoftenerType, "fabric_softener_type"),
+#                         colour_id=get_obj_id(Colour, "colour"),
+#                         top_up_service_id=get_obj_id(TopUpService, "top_up_service"),
+#                         box=spec_data.get('box', False),
+#                         fold=spec_data.get('fold', False),
+#                     )
+
+#                 total = (Decimal(product.rate_per_unit) * quantity).quantize(Decimal('0.00'))
+
+#                 OrderItem.objects.create(
+#                     order=order,
+#                     product=product,
+#                     quantity=quantity,
+#                     total=total,
+#                     hanger=hanger,
+#                     specification=specification,
+#                 )
+
+#                 total_amount += total
+
+#             # Calculate total after discount
+#             total_after_discount = total_amount - (total_amount * (discount_percentage / Decimal('100')))
+
+#             # Determine GST type
+#             customer_state = customer.state.lower() if customer and customer.state else ""
+#             is_uttar_pradesh = (customer_state == "uttar pradesh")
+
+#             igst = Decimal('0.00')
+
+#             # Extract GST from the already included price
+#             if is_uttar_pradesh:
+#                 base_price = total_after_discount / Decimal('1.18')
+#                 cgst = base_price * (Decimal('9') / Decimal('100'))
+#                 sgst = base_price * (Decimal('9') / Decimal('100'))
+#             else:
+#                 base_price = total_after_discount / Decimal('1.18')
+#                 cgst = Decimal('0.00')
+#                 sgst = Decimal('0.00')
+#                 igst = base_price * (Decimal('18') / Decimal('100'))
+
+#             total_gst = (cgst + sgst + igst).quantize(Decimal('0.00'))
+#             total_after_gst = total_after_discount
+
+#             order.total_amount = total_amount.quantize(Decimal('0.00'))
+#             order.total_after_discount = total_after_discount.quantize(Decimal('0.00'))
+#             order.total_gst = total_gst
+#             order.total_cgst = cgst.quantize(Decimal('0.00'))
+#             order.total_sgst = sgst.quantize(Decimal('0.00'))
+#             order.total_igst = igst.quantize(Decimal('0.00'))
+#             order.total_after_gst = total_after_gst
+#             order.save()
+
+#         # Assuming print_bill returns a DRF Response
+#         response = print_bill(order.order_number)
+#         return response
+
+#     except Exception as e:
+#         return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# def place_order(request, outlet_id):
+#     try:
+#         # Validate outlet
+#         try:
+#             outlet = Outlet.objects.get(id=outlet_id)
+#         except Outlet.DoesNotExist:
+#             return Response({'error': True, 'detail': 'Outlet not found'}, status=status.HTTP_404_NOT_FOUND)
+
+#         # Extract body data
+#         data = request.data
+#         customer_phone = data.get('customer_phone')
+#         date_of_collection = data.get('date_of_collection')
+#         discount_percentage = Decimal(data.get('discount_percentage', 0.0)).quantize(Decimal('0.00'))
+#         mode_of_payment = data.get('mode_of_payment', 'CASH')
+#         items = data.get('order_items')
+
+#         if not items:
+#             return Response({'error': True, 'detail': 'Order items are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Parse and format date_of_collection
+#         if date_of_collection:
+#             try:
+#                 date_of_collection = datetime.fromisoformat(date_of_collection).strftime('%Y-%m-%d')
+#             except ValueError:
+#                 return Response({'error': True, 'detail': 'Invalid date format. Use ISO 8601 format.'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Validate customer
+#         customer = None
+#         if customer_phone:
+#             customer, created = Customer.objects.get_or_create(
+#                 phone_number=customer_phone, defaults={'name': 'Unknown'}
+#             )
+
+#         # Generate order number
+#         order_number = ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
+
+#         # Generate invoice number in the format: outlet_idLTmmyysequential_number
+#         current_date = now()
+#         month_year = current_date.strftime('%m%y')
+#         last_order = Order.objects.filter(outlet=outlet, invoice_number__startswith=f"{outlet_id}LT{month_year}").order_by('-id').first()
+
+#         if last_order:
+#             # Extract the sequential number from the end of the invoice number
+#             sequential_part = last_order.invoice_number[len(f"{outlet_id}LT{month_year}"):]
+#             if sequential_part.isdigit():
+#                 last_invoice_number = int(sequential_part)
+#             else:
+#                 return Response({'error': True, 'detail': 'Invalid format for last invoice number'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#             next_invoice_number = last_invoice_number + 1
+#         else:
+#             next_invoice_number = 1
+
+#         # Construct the new invoice number
+#         invoice_number = f"{outlet_id}LT{month_year}{next_invoice_number}"
+
+#         # Calculate totals and create order
+#         total_amount = Decimal('0.00')  # Use Decimal for accurate monetary calculation
+#         with transaction.atomic():
+#             order = Order.objects.create(
+#                 order_number=order_number,
+#                 outlet=outlet,
+#                 customer=customer,
+#                 date_of_collection=date_of_collection,
+#                 total_amount=total_amount,  # Placeholder, will be updated later
+#                 discount_percentage=discount_percentage,
+#                 mode_of_payment=mode_of_payment,
+#                 invoice_number=invoice_number,
+#             )
+
+#             # Add items to order and calculate total
+#             for item in items:
+#                 product_id = item.get('product_id')
+#                 quantity = Decimal(item.get('quantity', 1)).quantize(Decimal('0.00'))
+#                 hanger = item.get('hanger', False)  # Extract hanger value
+
+#                 try:
+#                     product = Product.objects.get(id=product_id)
+#                 except Product.DoesNotExist:
+#                     return Response({'error': True, 'detail': f'Product with ID {product_id} not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+#                 total = (Decimal(product.rate_per_unit) * quantity).quantize(Decimal('0.00'))
+#                 OrderItem.objects.create(order=order, product=product, quantity=quantity, total=total, hanger=hanger)
+#                 total_amount += total
+
+#             # Calculate total after discount
+#             total_after_discount = total_amount - (total_amount * (discount_percentage / Decimal('100')))
+
+#             # Determine GST type
+#             customer_state = customer.state.lower() if customer and customer.state else ""
+#             is_uttar_pradesh = (customer_state == "uttar pradesh")
+
+            
+#             # Extract GST from the already included price
+#             if is_uttar_pradesh:
+
+#                 base_price = total_after_discount / Decimal('1.18')  # Removing 18% GST
+#                 cgst = base_price * (Decimal('9') / Decimal('100'))
+#                 sgst = base_price * (Decimal('9') / Decimal('100'))
+
+#             else:
+
+#                 base_price = total_after_discount / Decimal('1.18')  # Removing 18% GST
+#                 cgst = Decimal('0.00')
+#                 sgst = Decimal('0.00')
+#                 igst = base_price * (Decimal('18') / Decimal('100'))
+
+#             # Final total remains the same (already inclusive of GST)
+#             total_gst = (cgst + sgst + igst).quantize(Decimal('0.00'))
+#             total_after_gst = total_after_discount  # No additional GST is added
+            
+#             # Update order fields
+#             order.total_amount = total_amount.quantize(Decimal('0.00'))  # Total before discount
+#             order.total_after_discount = total_after_discount.quantize(Decimal('0.00'))
+#             order.total_gst = total_gst
+#             order.total_cgst = cgst.quantize(Decimal('0.00'))
+#             order.total_sgst = sgst.quantize(Decimal('0.00'))
+#             order.total_igst = igst.quantize(Decimal('0.00'))
+#             order.total_after_gst = total_after_gst  # Same as total_after_discount (since GST is included)
+#             order.save()
+
+#         response = print_bill(order.order_number)  # Assuming print_bill is defined elsewhere
+#         return response
+
+#     except Exception as e:
+#         return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -941,15 +1551,12 @@ def get_orders_by_outlet(request, outlet_id):
     Retrieve all orders for a specific outlet with optional date and customer filters.
     """
     try:
-        # Validate outlet existence
         outlet = Outlet.objects.get(id=outlet_id)
         
-        # Get query parameters
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
         customer_phone = request.query_params.get('customer_phone')
 
-        # Build filters
         filters = Q(outlet=outlet)
         if start_date:
             filters &= Q(date_of_billing__gte=start_date)
@@ -965,10 +1572,8 @@ def get_orders_by_outlet(request, outlet_id):
                     "detail": "No orders found for the given customer phone number."
                 }, status=status.HTTP_404_NOT_FOUND)
         
-        # Query orders with applied filters
         orders = Order.objects.filter(filters).order_by('-date_of_billing')
 
-        # Serialize results
         serializer = OrderSerializer(orders, many=True)
 
         return Response({
@@ -1079,3 +1684,323 @@ def add_product(request, outlet_id):
 #         "total_in_words": "Seven Hundred Eighty-Five Rupees Only",
 #     }
 #     return render(request, "bill.html", context)
+
+
+
+# -------- Brand --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: BrandSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=BrandSerializer,
+    responses={201: BrandSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def brand_list_create(request):
+    if request.method == "GET":
+        brands = Brand.objects.all().order_by("name")
+        serializer = BrandSerializer(brands, many=True)
+        return Response(serializer.data)
+
+    serializer = BrandSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- Pattern --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: PatternSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=PatternSerializer,
+    responses={201: PatternSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def pattern_list_create(request):
+    if request.method == "GET":
+        patterns = Pattern.objects.all().order_by("name")
+        serializer = PatternSerializer(patterns, many=True)
+        return Response(serializer.data)
+
+    serializer = PatternSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- StainType --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: StainTypeSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=StainTypeSerializer,
+    responses={201: StainTypeSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def stain_type_list_create(request):
+    if request.method == "GET":
+        stains = StainType.objects.all().order_by("name")
+        serializer = StainTypeSerializer(stains, many=True)
+        return Response(serializer.data)
+
+    serializer = StainTypeSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- DefectType --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: DefectTypeSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=DefectTypeSerializer,
+    responses={201: DefectTypeSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def defect_type_list_create(request):
+    if request.method == "GET":
+        defects = DefectType.objects.all().order_by("name")
+        serializer = DefectTypeSerializer(defects, many=True)
+        return Response(serializer.data)
+
+    serializer = DefectTypeSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- MaterialType --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: MaterialTypeSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=MaterialTypeSerializer,
+    responses={201: MaterialTypeSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def material_type_list_create(request):
+    if request.method == "GET":
+        materials = MaterialType.objects.all().order_by("name")
+        serializer = MaterialTypeSerializer(materials, many=True)
+        return Response(serializer.data)
+
+    serializer = MaterialTypeSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- StarchType --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: StarchTypeSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=StarchTypeSerializer,
+    responses={201: StarchTypeSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def starch_type_list_create(request):
+    if request.method == "GET":
+        starches = StarchType.objects.all().order_by("name")
+        serializer = StarchTypeSerializer(starches, many=True)
+        return Response(serializer.data)
+
+    serializer = StarchTypeSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- DetergentType --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: DetergentTypeSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=DetergentTypeSerializer,
+    responses={201: DetergentTypeSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def detergent_type_list_create(request):
+    if request.method == "GET":
+        detergents = DetergentType.objects.all().order_by("name")
+        serializer = DetergentTypeSerializer(detergents, many=True)
+        return Response(serializer.data)
+
+    serializer = DetergentTypeSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- DetergentScentType --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: DetergentScentTypeSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=DetergentScentTypeSerializer,
+    responses={201: DetergentScentTypeSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def detergent_scent_type_list_create(request):
+    if request.method == "GET":
+        scents = DetergentScentType.objects.all().order_by("name")
+        serializer = DetergentScentTypeSerializer(scents, many=True)
+        return Response(serializer.data)
+
+    serializer = DetergentScentTypeSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- WashTemperatureType --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: WashTemperatureTypeSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=WashTemperatureTypeSerializer,
+    responses={201: WashTemperatureTypeSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def wash_temperature_type_list_create(request):
+    if request.method == "GET":
+        temps = WashTemperatureType.objects.all().order_by("name")
+        serializer = WashTemperatureTypeSerializer(temps, many=True)
+        return Response(serializer.data)
+
+    serializer = WashTemperatureTypeSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- FabricSoftenerType --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: FabricSoftenerTypeSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=FabricSoftenerTypeSerializer,
+    responses={201: FabricSoftenerTypeSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def fabric_softener_type_list_create(request):
+    if request.method == "GET":
+        softeners = FabricSoftenerType.objects.all().order_by("name")
+        serializer = FabricSoftenerTypeSerializer(softeners, many=True)
+        return Response(serializer.data)
+
+    serializer = FabricSoftenerTypeSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- Colour --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: ColourSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=ColourSerializer,
+    responses={201: ColourSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def colour_list_create(request):
+    if request.method == "GET":
+        colours = Colour.objects.all().order_by("name")
+        serializer = ColourSerializer(colours, many=True)
+        return Response(serializer.data)
+
+    serializer = ColourSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# -------- TopUpService --------
+
+@swagger_auto_schema(
+    method="get",
+    responses={200: TopUpServiceSerializer(many=True)},
+)
+@swagger_auto_schema(
+    method="post",
+    request_body=TopUpServiceSerializer,
+    responses={201: TopUpServiceSerializer},
+)
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+def topup_service_list_create(request):
+    if request.method == "GET":
+        services = TopUpService.objects.all().order_by("name")
+        serializer = TopUpServiceSerializer(services, many=True)
+        return Response(serializer.data)
+
+    serializer = TopUpServiceSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+

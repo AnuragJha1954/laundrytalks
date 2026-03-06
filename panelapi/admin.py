@@ -6,7 +6,21 @@ from .models import (
     Customer,
     Order,
     OrderItem,
-    Category
+    Category,
+    Brand,
+    Pattern,
+    StainType,
+    DefectType,
+    MaterialType,
+    StarchType,
+    DetergentType,
+    DetergentScentType,
+    WashTemperatureType,
+    FabricSoftenerType,
+    Colour,
+    TopUpService,
+    OrderItemSpecification,
+
 )
 
 
@@ -60,3 +74,119 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ('name',)     # Add search functionality for the name field
     ordering = ('name',)          # Order categories alphabetically by name
     list_per_page = 25            # Paginate the list view with 25 items per page
+
+
+# ==========================
+# NEW Master Models
+# ==========================
+
+class SimpleNameAdmin(admin.ModelAdmin):
+    """Generic admin for models with just a 'name' field."""
+    list_display = ("name",)
+    search_fields = ("name",)
+    ordering = ("name",)
+
+
+@admin.register(Brand)
+class BrandAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(Pattern)
+class PatternAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(StainType)
+class StainTypeAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(DefectType)
+class DefectTypeAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(MaterialType)
+class MaterialTypeAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(StarchType)
+class StarchTypeAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(DetergentType)
+class DetergentTypeAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(DetergentScentType)
+class DetergentScentTypeAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(WashTemperatureType)
+class WashTemperatureTypeAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(FabricSoftenerType)
+class FabricSoftenerTypeAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(Colour)
+class ColourAdmin(SimpleNameAdmin):
+    pass
+
+
+@admin.register(TopUpService)
+class TopUpServiceAdmin(SimpleNameAdmin):
+    pass
+
+
+# ==========================
+# OrderItemSpecification
+# ==========================
+
+@admin.register(OrderItemSpecification)
+class OrderItemSpecificationAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "brand",
+        "pattern",
+        "colour",
+        "top_up_service",
+        "box",
+        "fold",
+    )
+    list_filter = (
+        "brand",
+        "pattern",
+        "colour",
+        "top_up_service",
+        "box",
+        "fold",
+    )
+    search_fields = (
+        "brand__name",
+        "pattern__name",
+        "colour__name",
+        "top_up_service__name",
+    )
+    autocomplete_fields = (
+        "brand",
+        "pattern",
+        "stain_type",
+        "defect_type",
+        "material_type",
+        "starch_type",
+        "detergent_type",
+        "detergent_scent_type",
+        "wash_temperature_type",
+        "fabric_softener_type",
+        "colour",
+        "top_up_service",
+    )

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'userauth',
     'counterapi',
     'panelapi',
+    'v2',
     'drf_yasg',
     'rest_framework.authtoken',
     'corsheaders',

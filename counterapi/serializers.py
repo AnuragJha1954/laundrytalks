@@ -4,7 +4,20 @@ from panelapi.models import (
     Product,
     Customer,
     Order,
-    OrderItem
+    OrderItem,
+    Brand,
+    Pattern,
+    StainType,
+    DefectType,
+    MaterialType,
+    StarchType,
+    DetergentType,
+    DetergentScentType,
+    WashTemperatureType,
+    FabricSoftenerType,
+    Colour,
+    TopUpService,
+    OrderItemSpecification,
 )
 
 
@@ -67,13 +80,39 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 
+class OrderItemSpecificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItemSpecification
+        fields = [
+            'id',
+            'brand',
+            'pattern',
+            'stain_type',
+            'defect_type',
+            'material_type',
+            'starch_type',
+            'detergent_type',
+            'detergent_scent_type',
+            'wash_temperature_type',
+            'fabric_softener_type',
+            'colour',
+            'top_up_service',
+            'box',
+            'fold',
+        ]
+
+
 class OrderItemSerializer(serializers.ModelSerializer):
+    specification = OrderItemSpecificationSerializer(read_only=True)
+
     class Meta:
         model = OrderItem
-        fields = ['product', 'quantity', 'total', 'hanger']
+        fields = ['product', 'quantity', 'total', 'hanger', 'specification']
+
 
 class OrderSerializer(serializers.ModelSerializer):
-    order_items = OrderItemSerializer(many=True, write_only=True)
+    # now read_only so it’s returned in responses
+    order_items = OrderItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order
@@ -94,3 +133,74 @@ class OrderSerializer(serializers.ModelSerializer):
             'order_items',
         ]
 
+
+class BrandSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Brand
+        fields = "__all__"
+
+
+class PatternSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Pattern
+        fields = "__all__"
+
+
+class StainTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StainType
+        fields = "__all__"
+
+
+class DefectTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DefectType
+        fields = "__all__"
+
+
+class MaterialTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MaterialType
+        fields = "__all__"
+
+
+class StarchTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StarchType
+        fields = "__all__"
+
+
+class DetergentTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DetergentType
+        fields = "__all__"
+
+
+class DetergentScentTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DetergentScentType
+        fields = "__all__"
+
+
+class WashTemperatureTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WashTemperatureType
+        fields = "__all__"
+
+
+class FabricSoftenerTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FabricSoftenerType
+        fields = "__all__"
+
+
+class ColourSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Colour
+        fields = "__all__"
+
+
+class TopUpServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TopUpService
+        fields = "__all__"

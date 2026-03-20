@@ -13,6 +13,8 @@ class Outlet(models.Model):
     address = models.TextField()
     owner_details = models.TextField()
 
+    gst_enabled = models.BooleanField(default=True)  # ✅ GST toggle
+
     def __str__(self):
         return f"{self.owner_name} - {self.company_owned}"
     

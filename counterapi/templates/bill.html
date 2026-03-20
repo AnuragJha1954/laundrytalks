@@ -97,12 +97,13 @@
         <div class="header">
             <img src="https://static.wixstatic.com/media/29e9be_3a30e960b0d844b787c9b3c107b83cae~mv2.jpg/v1/fill/w_341,h_66,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/New%20Logo_edited.jpg" alt="Company Logo">
             <div class="company-details">
-                <p><strong>LAUNDRY TALKS PRIVATE LIMITED</strong></p>
-                <p>Regd. Off.: A-130, Sector-63, Noida-201301</p>
+                <p><strong>{{ company_name|upper }}</strong></p>
                 <p>Plant: A-48, Sector-64, Noida-201301</p>
                 <p>Phone No.: 0120-4346675, 9205032800</p>
                 <p>Email: info@laundrytalks.in</p>
+                {% if show_gstin %}
                 <p>GSTIN No.: 09AAFCL6359K1ZX</p>
+                {% endif %}
             </div>
         </div>
 
@@ -200,7 +201,18 @@
             </tr>
         </table>
         
-        <p><strong>Total Amount: </strong> ₹ {{ grand_amount }}  <strong> {% if cgst %} CGST @9%:</strong> ₹{{ cgst }}, <strong>SGST @9%:</strong> ₹{{ sgst }} <strong>{% elif igst %} IGST @18%: </strong>₹{{ igst }} {% endif %}</p>
+        <p><strong>Total Amount: </strong> ₹ {{ grand_amount }}</p>
+
+        {% if gst_enabled %}
+        <p>
+            {% if cgst %}
+                <strong>CGST @9%:</strong> ₹{{ cgst }},
+                <strong>SGST @9%:</strong> ₹{{ sgst }}
+            {% elif igst %}
+                <strong>IGST @18%:</strong> ₹{{ igst }}
+            {% endif %}
+        </p>
+        {% endif %}
         
         <strong><p>Total (in words): {{ total_in_words }}</p></strong>
 
@@ -209,16 +221,18 @@
             <p>Payment Details:</p>
             <div style="display: flex; align-items: center; margin-bottom: 5px;">
                 <img src="data:image/png;base64,{{ qr_code }}" alt="UPI QR Code">
-                <p><strong>UPI ID:</strong> vyapar.171035825947@hdfcbank</p>
+                <p><strong>UPI ID:</strong> {{ upi_id }}</p>
             </div>  
             <p>Terms & Conditions:</p>
             <ol>
+                {% if gst_enabled %}
                 <li>All prices quoted are inclusive of Goods and Services Tax (GST).</li>
+                {% endif %}
                 <li>For any loss or damage, compensation amount shall not exceed 10x service charge or garment cost, whichever is lower.</li>
                 <li>For detailed T&C, visit <a href="https://www.laundrytalks.in" target="_blank">www.laundrytalks.in</a></li>
                 <li>Express Service Charges are 100% extra.</li>
             </ol>
-            <p class="right-align">For Laundry Talks Pvt. Ltd.<br><br><br><br><br>Auth. Signatory</p>
+            <p class="right-align">For {{ company_name }}.<br><br><br><br><br>Auth. Signatory</p>
         </div>
     </div>
 </body>

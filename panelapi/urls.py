@@ -44,4 +44,6 @@ urlpatterns = [
     
     path('customers/<int:customer_id>/edit/', views.edit_customer, name='edit_customer'),
     
+    path('gst/toggle/<int:outlet_id>/', views.toggle_gst, name='toggle_gst'),
+    
 ]

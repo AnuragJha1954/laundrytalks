@@ -672,6 +672,7 @@ def edit_product(request, product_id):
     }
 )
 @api_view(['DELETE'])
+@permission_classes([AllowAny])
 def delete_product(request, product_id):
     try:
         product = Product.objects.get(id=product_id)
@@ -821,8 +822,50 @@ def get_orders_by_outlet(request, outlet_id):
 
 
 
-
+@swagger_auto_schema(
+    method='get',
+    operation_description="Get order details using order number",
+    manual_parameters=[
+        openapi.Parameter(
+            'order_number',
+            openapi.IN_PATH,
+            description="Unique order number",
+            type=openapi.TYPE_STRING
+        )
+    ],
+    responses={
+        200: openapi.Response(
+            description="Order details fetched successfully",
+            examples={
+                "application/json": {
+                    "error": False,
+                    "detail": "Order details fetched successfully",
+                    "data": {}
+                }
+            }
+        ),
+        404: openapi.Response(
+            description="Order not found",
+            examples={
+                "application/json": {
+                    "error": True,
+                    "detail": "Order not found"
+                }
+            }
+        ),
+        500: openapi.Response(
+            description="Internal server error",
+            examples={
+                "application/json": {
+                    "error": True,
+                    "detail": "Error message"
+                }
+            }
+        )
+    }
+)
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_order_details(request, order_number):
     try:
         # Fetch the order by order_number
@@ -907,50 +950,50 @@ def get_order_details(request, order_number):
 @permission_classes([AllowAny])
 def generate_bill(request, order_number):
     try:
-        # Fetch the order and related data
         order = Order.objects.select_related('customer', 'outlet').get(order_number=order_number)
         order_items = OrderItem.objects.filter(order=order).select_related('product')
 
         if not order_items.exists():
-            return JsonResponse({'error': True, 'detail': 'No items found in the order'}, status=404)
+            return JsonResponse({'error': True, 'detail': 'No items found'}, status=404)
 
-        # Get HSN code from the first product
-        # first_product = order_items.first().product
-        # hsn_code = first_product.hsn_sac_code if first_product.hsn_sac_code else "N/A"
+        # 🔥 GST toggle
+        gst_enabled = order.outlet.gst_enabled
 
-        # Calculate totals
         total_quantity = sum(item.quantity for item in order_items)
         total_discount = Decimal(order.total_amount) * (Decimal(order.discount_percentage) / Decimal(100)) if order.discount_percentage > 0 else Decimal(0)
         net_amount = Decimal(order.total_amount) - total_discount
-        sgst = Decimal(order.total_sgst or 0)
-        cgst = Decimal(order.total_cgst or 0)
-        igst = Decimal(order.total_igst or 0)
 
-        # Calculate round-off and grand total
+        if gst_enabled:
+            sgst = Decimal(order.total_sgst or 0)
+            cgst = Decimal(order.total_cgst or 0)
+            igst = Decimal(order.total_igst or 0)
+
+            upi_id = "vyapar.171035825947@hdfcbank"
+            company_name = "Laundry Talks Private Limited"
+            show_gstin = True
+        else:
+            sgst = cgst = igst = Decimal('0.00')
+
+            upi_id = "9582265787-2@ybl"
+            company_name = "Laundry Talks"
+            show_gstin = False
+
+        # Round off
         calculated_total = net_amount
         rounded_total = calculated_total.quantize(Decimal('1'), rounding="ROUND_HALF_UP")
         round_off = rounded_total - calculated_total
         grand_amount = rounded_total
 
-        # Convert grand total to words
-        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace(", zero paise", "").replace("-", " ").replace(",", "").title()
+        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN')\
+            .replace(", zero paise", "").replace("-", " ").replace(",", "").title()
 
-        # UPI details and QR Code
-        upi_id = "vyapar.171035825947@hdfcbank"
-        name = "Laundry Talks"
-        upi_url = f"upi://pay?pa={upi_id}&pn={name}"
-        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
-        qr.add_data(upi_url)
-        qr.make(fit=True)
-        qr_img = qr.make_image(fill_color="black", back_color="white")
-
-        # Convert QR code image to base64
+        # QR Code
+        upi_url = f"upi://pay?pa={upi_id}&pn={company_name}"
+        qr = qrcode.make(upi_url)
         qr_buffer = BytesIO()
-        qr_img.save(qr_buffer)
-        qr_buffer.seek(0)
+        qr.save(qr_buffer)
         qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
 
-        # Prepare context for rendering
         context = {
             "customer_name": order.customer.name if order.customer else "Walk-in Customer",
             "billing_date": order.date_of_billing.strftime('%Y-%m-%d'),
@@ -960,11 +1003,12 @@ def generate_bill(request, order_number):
             "reference": order.customer.reference if order.customer else "N/A",
             "gst_number": order.customer.gst_number if order.customer else "Not Provided",
             "collection_date": order.date_of_collection.strftime('%Y-%m-%d') if order.date_of_collection else "Not Provided",
+
             "items": [
                 {
                     "description": item.product.item_name,
-                    "hanger": item.hanger,  # Include the hanger value
-                    "hsn_code": item.product.hsn_sac_code if hasattr(item.product, "hsn_sac_code") else " ",
+                    "hanger": item.hanger,
+                    "hsn_code": getattr(item.product, "hsn_sac_code", ""),
                     "quantity": item.quantity,
                     "rate": round(item.product.rate_per_unit, 2),
                     "total": round(item.total, 2),
@@ -972,19 +1016,27 @@ def generate_bill(request, order_number):
             ],
             "total_quantity": total_quantity,
             "total_amount": "{:.2f}".format(order.total_amount),
-            "discount_percentage": "{:.2f}".format(order.discount_percentage) if order.discount_percentage > 0 else "0.00",
+            "discount_percentage": "{:.2f}".format(order.discount_percentage),
             "discount": "{:.2f}".format(total_discount),
             "net_amount": "{:.2f}".format(net_amount),
-            "sgst": "{:.2f}".format(sgst) if sgst > 0 else None,
-            "cgst": "{:.2f}".format(cgst) if cgst > 0 else None,
-            "igst": "{:.2f}".format(igst) if igst > 0 else None,
+
+            "sgst": "{:.2f}".format(sgst) if gst_enabled and sgst > 0 else None,
+            "cgst": "{:.2f}".format(cgst) if gst_enabled and cgst > 0 else None,
+            "igst": "{:.2f}".format(igst) if gst_enabled and igst > 0 else None,
+
             "round_off": "{:.2f}".format(round_off),
             "grand_amount": "{:.2f}".format(grand_amount),
             "total_in_words": total_in_words + " Only.",
-            "qr_code": qr_base64
+
+            "qr_code": qr_base64,
+
+            # 🔥 control flags
+            "gst_enabled": gst_enabled,
+            "company_name": company_name,
+            "show_gstin": show_gstin,
+            "upi_id": upi_id,
         }
 
-        # Render the template with the context
         return render(request, "bill.html", context)
 
     except Order.DoesNotExist:
@@ -1171,6 +1223,7 @@ def update_order_discount(request, outlet_id, order_number,user_id):
     }
 )
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_order_details_by_invoice(request, invoice_number):
     try:
         order = get_object_or_404(Order, invoice_number=invoice_number)
@@ -1247,6 +1300,7 @@ def get_order_details_by_invoice(request, invoice_number):
     }
 )
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def cancel_order(request, invoice_number):
     try:
         # Order cancellation logic here (stubbed for now)
@@ -1294,6 +1348,7 @@ def cancel_order(request, invoice_number):
     }
 )
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def add_refund(request, invoice_number):
     try:
         payment_mode = request.data.get("payment_mode")
@@ -1340,6 +1395,7 @@ def add_refund(request, invoice_number):
     responses={200: openapi.Response(description="List of customers")}
 )
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def get_customers_by_outlet(request, outlet_id):
     try:
         # Get query params
@@ -1418,6 +1474,7 @@ def get_customers_by_outlet(request, outlet_id):
     responses={200: CustomerUpdateSerializer()}
 )
 @api_view(['PATCH'])
+@permission_classes([AllowAny])
 def edit_customer(request, customer_id):
     try:
         customer = Customer.objects.get(id=customer_id)
@@ -1438,7 +1495,37 @@ def edit_customer(request, customer_id):
 
 
 
+@swagger_auto_schema(
+    method='put',
+    operation_description="Toggle GST status for an outlet",
+    responses={
+        200: openapi.Response(
+            description="GST toggled successfully",
+            examples={
+                "application/json": {
+                    "message": "GST toggled successfully",
+                    "gst_enabled": True
+                }
+            }
+        ),
+        404: "Outlet not found"
+    }
+)
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def toggle_gst(request, outlet_id):
+    outlet = get_object_or_404(Outlet, id=outlet_id)
 
+    outlet.gst_enabled = not outlet.gst_enabled
+    outlet.save()
+
+    return Response(
+        {
+            "message": "GST toggled successfully",
+            "gst_enabled": outlet.gst_enabled
+        },
+        status=status.HTTP_200_OK
+    )
 
 
 

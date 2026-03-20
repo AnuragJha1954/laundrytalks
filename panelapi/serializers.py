@@ -15,8 +15,8 @@ User = get_user_model()
 class OutletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Outlet
-        fields = ['id', 'owner_name', 'company_owned', 'location', 'address', 'owner_details']
-        read_only_fields = ['id']
+        fields = ['id', 'owner_name', 'company_owned', 'location', 'address', 'owner_details','gst_enabled']
+        read_only_fields = ['id','gst_enabled']
 
 
 

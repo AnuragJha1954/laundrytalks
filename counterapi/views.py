@@ -558,100 +558,189 @@ def add_customer(request, outlet_id):
 # }
 
 
+# def print_bill(order_number):
+#     try:
+#         # Fetch the order details
+#         order = Order.objects.select_related('customer', 'outlet').get(order_number=order_number)
+#         order_items = OrderItem.objects.filter(order=order).select_related('product')
+
+#         if not order_items.exists():
+#             return Response({'error': True, 'detail': 'No items found in the order'}, status=status.HTTP_404_NOT_FOUND)
+
+#         # Calculate order totals
+#         total_quantity = sum(item.quantity for item in order_items)
+#         total_discount = Decimal(order.total_amount) * (Decimal(order.discount_percentage) / Decimal(100)) if order.discount_percentage > 0 else Decimal(0)
+#         net_amount = Decimal(order.total_amount) - total_discount  # Net amount already includes GST
+
+#         sgst = Decimal(order.total_sgst)
+#         cgst = Decimal(order.total_cgst)
+#         igst = Decimal(order.total_igst)
+
+#         # Calculate round-off and grand amount
+#         calculated_total = net_amount  # Since GST is already included, total remains the same
+#         rounded_total = calculated_total.quantize(Decimal('1'), rounding="ROUND_HALF_UP")  # Round to the nearest integer
+#         round_off = rounded_total - calculated_total  # Difference between rounded total and actual total
+#         grand_amount = rounded_total  # Grand total is the rounded value
+
+#         # Convert grand total into words
+#         total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace("zero paise", "").replace("-", " ").replace(",", "").title()
+
+#         # UPI payment details
+#         upi_id = "vyapar.171035825947@hdfcbank"
+#         name = "Laundry Talks"
+
+#         # Generate UPI URL and QR Code
+#         upi_url = f"upi://pay?pa={upi_id}&pn={name}"
+#         qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
+#         qr.add_data(upi_url)
+#         qr.make(fit=True)
+#         qr_img = qr.make_image(fill_color="black", back_color="white")
+
+#         # Save QR code image to BytesIO buffer
+#         qr_buffer = BytesIO()
+#         qr_img.save(qr_buffer)
+#         qr_buffer.seek(0)
+
+#         # Convert QR code image to base64
+#         qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
+
+#         # Build context for the template
+#         context = {
+#             "customer_name": order.customer.name if order.customer else "Walk-in Customer",
+#             "billing_date": order.date_of_billing.strftime('%Y-%m-%d'),
+#             "customer_address": order.customer.address if order.customer else "Not Provided",
+#             "invoice_number": order.invoice_number,
+#             "customer_phone": order.customer.phone_number if order.customer else "Not Provided",
+#             "reference": order.customer.reference if order.customer and hasattr(order.customer, "reference") else "N/A",
+#             "gst_number": order.customer.gst_number if order.customer else "Not Provided",
+#             "collection_date": order.date_of_collection.strftime('%Y-%m-%d') if order.date_of_collection else "Not Provided",
+#             "items": [
+#                 {
+#                     "description": item.product.item_name,
+#                     "hanger": item.hanger,  # Include the hanger value
+#                     "hsn_code": item.product.hsn_sac_code if hasattr(item.product, "hsn_sac_code") else " ",
+#                     "quantity": item.quantity,
+#                     "rate": round(item.product.rate_per_unit,2 ),  # Extract GST from rate
+#                     "total": round(item.total , 2),  # Extract GST from total
+#                 } for item in order_items
+#             ],
+#             "total_quantity": total_quantity,
+#             "total_amount": "{:.2f}".format(order.total_amount),
+#             "discount_percentage": "{:.2f}".format(order.discount_percentage) if order.discount_percentage > 0 else "0.00",
+#             "discount": "{:.2f}".format(total_discount),
+#             "net_amount": "{:.2f}".format(net_amount),  # Now it's the base price before GST
+#             "sgst": "{:.2f}".format(sgst) if sgst > 0 else None,
+#             "cgst": "{:.2f}".format(cgst) if cgst > 0 else None,
+#             "igst": "{:.2f}".format(igst) if igst > 0 else None,
+#             "round_off": "{:.2f}".format(round_off),
+#             "grand_amount": "{:.2f}".format(grand_amount),
+#             "total_in_words": total_in_words + " Only.",
+#             "qr_code": qr_base64
+#         }
+
+#         # Render the template
+#         html = render_to_string("bill.html", context)
+
+#         return {
+#             "html": html,
+#             "context": context
+#         }
+
+#     except Order.DoesNotExist:
+#         return Response({'error': True, 'detail': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+#     except Exception as e:
+#         return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 def print_bill(order_number):
     try:
-        # Fetch the order details
         order = Order.objects.select_related('customer', 'outlet').get(order_number=order_number)
         order_items = OrderItem.objects.filter(order=order).select_related('product')
 
         if not order_items.exists():
-            return Response({'error': True, 'detail': 'No items found in the order'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': True, 'detail': 'No items found'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Calculate order totals
+        gst_enabled = order.outlet.gst_enabled
+
         total_quantity = sum(item.quantity for item in order_items)
         total_discount = Decimal(order.total_amount) * (Decimal(order.discount_percentage) / Decimal(100)) if order.discount_percentage > 0 else Decimal(0)
-        net_amount = Decimal(order.total_amount) - total_discount  # Net amount already includes GST
 
-        sgst = Decimal(order.total_sgst)
-        cgst = Decimal(order.total_cgst)
-        igst = Decimal(order.total_igst)
+        net_amount = Decimal(order.total_amount) - total_discount
 
-        # Calculate round-off and grand amount
-        calculated_total = net_amount  # Since GST is already included, total remains the same
-        rounded_total = calculated_total.quantize(Decimal('1'), rounding="ROUND_HALF_UP")  # Round to the nearest integer
-        round_off = rounded_total - calculated_total  # Difference between rounded total and actual total
-        grand_amount = rounded_total  # Grand total is the rounded value
+        # ✅ GST LOGIC
+        if gst_enabled:
+            sgst = Decimal(order.total_sgst)
+            cgst = Decimal(order.total_cgst)
+            igst = Decimal(order.total_igst)
 
-        # Convert grand total into words
-        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN').replace("zero paise", "").replace("-", " ").replace(",", "").title()
+            upi_id = "vyapar.171035825947@hdfcbank"
+            company_name = "Laundry Talks Private Limited"
+            show_gstin = True
+        else:
+            sgst = cgst = igst = Decimal('0.00')
 
-        # UPI payment details
-        upi_id = "vyapar.171035825947@hdfcbank"
-        name = "Laundry Talks"
+            upi_id = "9582265787-2@ybl"
+            company_name = "Laundry Talks"
+            show_gstin = False
 
-        # Generate UPI URL and QR Code
-        upi_url = f"upi://pay?pa={upi_id}&pn={name}"
-        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=4)
-        qr.add_data(upi_url)
-        qr.make(fit=True)
-        qr_img = qr.make_image(fill_color="black", back_color="white")
+        # Round off
+        calculated_total = net_amount
+        rounded_total = calculated_total.quantize(Decimal('1'), rounding="ROUND_HALF_UP")
+        round_off = rounded_total - calculated_total
+        grand_amount = rounded_total
 
-        # Save QR code image to BytesIO buffer
+        total_in_words = num2words(grand_amount, to='currency', currency='INR', lang='en_IN')\
+            .replace("zero paise", "").replace("-", " ").replace(",", "").title()
+
+        # QR Code
+        upi_url = f"upi://pay?pa={upi_id}&pn={company_name}"
+        qr = qrcode.make(upi_url)
         qr_buffer = BytesIO()
-        qr_img.save(qr_buffer)
-        qr_buffer.seek(0)
+        qr.save(qr_buffer)
+        qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode()
 
-        # Convert QR code image to base64
-        qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
-
-        # Build context for the template
         context = {
             "customer_name": order.customer.name if order.customer else "Walk-in Customer",
             "billing_date": order.date_of_billing.strftime('%Y-%m-%d'),
             "customer_address": order.customer.address if order.customer else "Not Provided",
             "invoice_number": order.invoice_number,
             "customer_phone": order.customer.phone_number if order.customer else "Not Provided",
-            "reference": order.customer.reference if order.customer and hasattr(order.customer, "reference") else "N/A",
-            "gst_number": order.customer.gst_number if order.customer else "Not Provided",
             "collection_date": order.date_of_collection.strftime('%Y-%m-%d') if order.date_of_collection else "Not Provided",
             "items": [
                 {
                     "description": item.product.item_name,
-                    "hanger": item.hanger,  # Include the hanger value
-                    "hsn_code": item.product.hsn_sac_code if hasattr(item.product, "hsn_sac_code") else " ",
+                    "hanger": item.hanger,
+                    "hsn_code": getattr(item.product, "hsn_sac_code", ""),
                     "quantity": item.quantity,
-                    "rate": round(item.product.rate_per_unit,2 ),  # Extract GST from rate
-                    "total": round(item.total , 2),  # Extract GST from total
+                    "rate": round(item.product.rate_per_unit, 2),
+                    "total": round(item.total, 2),
                 } for item in order_items
             ],
             "total_quantity": total_quantity,
             "total_amount": "{:.2f}".format(order.total_amount),
-            "discount_percentage": "{:.2f}".format(order.discount_percentage) if order.discount_percentage > 0 else "0.00",
+            "discount_percentage": "{:.2f}".format(order.discount_percentage),
             "discount": "{:.2f}".format(total_discount),
-            "net_amount": "{:.2f}".format(net_amount),  # Now it's the base price before GST
-            "sgst": "{:.2f}".format(sgst) if sgst > 0 else None,
-            "cgst": "{:.2f}".format(cgst) if cgst > 0 else None,
-            "igst": "{:.2f}".format(igst) if igst > 0 else None,
+            "net_amount": "{:.2f}".format(net_amount),
+            "sgst": "{:.2f}".format(sgst) if gst_enabled and sgst > 0 else None,
+            "cgst": "{:.2f}".format(cgst) if gst_enabled and cgst > 0 else None,
+            "igst": "{:.2f}".format(igst) if gst_enabled and igst > 0 else None,
             "round_off": "{:.2f}".format(round_off),
             "grand_amount": "{:.2f}".format(grand_amount),
             "total_in_words": total_in_words + " Only.",
-            "qr_code": qr_base64
+            "qr_code": qr_base64,
+            
+            # 🔥 control flags
+            "gst_enabled": gst_enabled,
+            "company_name": company_name,
+            "show_gstin": show_gstin,
+            "upi_id": upi_id,
         }
 
-        # Render the template
         html = render_to_string("bill.html", context)
 
-        return {
-            "html": html,
-            "context": context
-        }
+        return {"html": html, "context": context}
 
     except Order.DoesNotExist:
-        return Response({'error': True, 'detail': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({'error': True, 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
+        return Response({'error': True, 'detail': 'Order not found'}, status=404)
 
 
 
@@ -959,15 +1048,25 @@ def place_order(request, outlet_id):
             igst = Decimal('0.00')
 
             # Extract GST from the already included price
-            if is_uttar_pradesh:
-                base_price = total_after_discount / Decimal('1.18')
-                cgst = base_price * (Decimal('9') / Decimal('100'))
-                sgst = base_price * (Decimal('9') / Decimal('100'))
+            gst_enabled = outlet.gst_enabled
+
+            if gst_enabled:
+                customer_state = customer.state.lower() if customer and customer.state else ""
+                is_uttar_pradesh = (customer_state == "uttar pradesh")
+
+                if is_uttar_pradesh:
+                    base_price = total_after_discount / Decimal('1.18')
+                    cgst = base_price * Decimal('0.09')
+                    sgst = base_price * Decimal('0.09')
+                    igst = Decimal('0.00')
+                else:
+                    base_price = total_after_discount / Decimal('1.18')
+                    cgst = Decimal('0.00')
+                    sgst = Decimal('0.00')
+                    igst = base_price * Decimal('0.18')
             else:
-                base_price = total_after_discount / Decimal('1.18')
-                cgst = Decimal('0.00')
-                sgst = Decimal('0.00')
-                igst = base_price * (Decimal('18') / Decimal('100'))
+                cgst = sgst = igst = Decimal('0.00')
+                base_price = total_after_discount
 
             total_gst = (cgst + sgst + igst).quantize(Decimal('0.00'))
             total_after_gst = total_after_discount
